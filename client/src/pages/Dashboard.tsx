@@ -173,7 +173,7 @@ export default function Dashboard() {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <div className="flex items-center gap-4 flex-1 min-w-0">
-              <h1 className="text-2xl font-semibold">Business Database</h1>
+              <h1 className="text-2xl font-semibold">POST MAILINGLIST MAKER</h1>
             </div>
             <div className="flex items-center gap-2">
               <Button
