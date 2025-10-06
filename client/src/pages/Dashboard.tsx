@@ -4,6 +4,7 @@ import { Plus, Upload, Download } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { SearchBar } from "@/components/SearchBar";
 import { TagFilter } from "@/components/TagFilter";
+import { ZipcodeFilter } from "@/components/ZipcodeFilter";
 import { BusinessTable } from "@/components/BusinessTable";
 import { ImportDialog } from "@/components/ImportDialog";
 import { ExportDialog } from "@/components/ExportDialog";
@@ -16,9 +17,9 @@ export default function Dashboard() {
     {
       id: "1",
       name: "Acme Corporation",
-      address: "123 Business St",
+      streetName: "123 Business St",
+      zipcode: "10001",
       city: "New York",
-      postalCode: "10001",
       country: "United States",
       email: "contact@acme.com",
       phone: "+1 234 567 8900",
@@ -29,9 +30,9 @@ export default function Dashboard() {
     {
       id: "2",
       name: "Tech Solutions Ltd",
-      address: "456 Innovation Ave",
+      streetName: "456 Innovation Ave",
+      zipcode: "94105",
       city: "San Francisco",
-      postalCode: "94105",
       country: "United States",
       email: "info@techsolutions.com",
       phone: "+1 415 555 0123",
@@ -42,9 +43,9 @@ export default function Dashboard() {
     {
       id: "3",
       name: "Global Imports Co",
-      address: "789 Trade Blvd",
+      streetName: "789 Trade Blvd",
+      zipcode: "90001",
       city: "Los Angeles",
-      postalCode: "90001",
       country: "United States",
       email: "hello@globalimports.com",
       phone: "+1 310 555 0456",
@@ -56,6 +57,7 @@ export default function Dashboard() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedZipcodes, setSelectedZipcodes] = useState<string[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [importOpen, setImportOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
@@ -70,6 +72,16 @@ export default function Dashboard() {
     return Array.from(tagSet).sort();
   }, [businesses]);
 
+  const allZipcodes = useMemo(() => {
+    const zipcodeSet = new Set<string>();
+    businesses.forEach(business => {
+      if (business.zipcode) {
+        zipcodeSet.add(business.zipcode);
+      }
+    });
+    return Array.from(zipcodeSet).sort();
+  }, [businesses]);
+
   const filteredBusinesses = useMemo(() => {
     return businesses.filter(business => {
       const matchesSearch = searchQuery === "" || 
@@ -80,9 +92,12 @@ export default function Dashboard() {
       const matchesTags = selectedTags.length === 0 || 
         selectedTags.some(tag => business.tags.includes(tag));
       
-      return matchesSearch && matchesTags;
+      const matchesZipcodes = selectedZipcodes.length === 0 || 
+        selectedZipcodes.includes(business.zipcode);
+      
+      return matchesSearch && matchesTags && matchesZipcodes;
     });
-  }, [businesses, searchQuery, selectedTags]);
+  }, [businesses, searchQuery, selectedTags, selectedZipcodes]);
 
   const handleImport = (file: File, tags: string[]) => {
     console.log("Import file:", file.name, "with tags:", tags);
@@ -144,6 +159,14 @@ export default function Dashboard() {
     }
   };
 
+  const toggleZipcode = (zipcode: string) => {
+    if (selectedZipcodes.includes(zipcode)) {
+      setSelectedZipcodes(selectedZipcodes.filter(z => z !== zipcode));
+    } else {
+      setSelectedZipcodes([...selectedZipcodes, zipcode]);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -186,12 +209,21 @@ export default function Dashboard() {
             onChange={setSearchQuery}
           />
           
-          <TagFilter
-            availableTags={allTags}
-            selectedTags={selectedTags}
-            onToggleTag={toggleTag}
-            onClearAll={() => setSelectedTags([])}
-          />
+          <div className="flex gap-4 flex-wrap">
+            <TagFilter
+              availableTags={allTags}
+              selectedTags={selectedTags}
+              onToggleTag={toggleTag}
+              onClearAll={() => setSelectedTags([])}
+            />
+            
+            <ZipcodeFilter
+              availableZipcodes={allZipcodes}
+              selectedZipcodes={selectedZipcodes}
+              onToggleZipcode={toggleZipcode}
+              onClearAll={() => setSelectedZipcodes([])}
+            />
+          </div>
         </div>
 
         <div className="space-y-4">

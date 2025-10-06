@@ -7,9 +7,9 @@ export default function EditBusinessDialogExample() {
   const [business] = useState<Business>({
     id: "1",
     name: "Acme Corporation",
-    address: "123 Business St",
+    streetName: "123 Business St",
+    zipcode: "10001",
     city: "New York",
-    postalCode: "10001",
     country: "United States",
     email: "contact@acme.com",
     phone: "+1 234 567 8900",

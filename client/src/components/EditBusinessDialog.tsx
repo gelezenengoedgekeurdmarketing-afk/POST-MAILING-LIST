@@ -18,9 +18,9 @@ import { X } from "lucide-react";
 export interface Business {
   id: string;
   name: string;
-  address: string;
+  streetName: string;
+  zipcode: string;
   city: string;
-  postalCode: string;
   country: string;
   email: string;
   phone: string;
@@ -40,9 +40,9 @@ export function EditBusinessDialog({ open, onOpenChange, business, onSave }: Edi
   const [formData, setFormData] = useState<Business>({
     id: "",
     name: "",
-    address: "",
+    streetName: "",
+    zipcode: "",
     city: "",
-    postalCode: "",
     country: "",
     email: "",
     phone: "",
@@ -59,9 +59,9 @@ export function EditBusinessDialog({ open, onOpenChange, business, onSave }: Edi
       setFormData({
         id: "",
         name: "",
-        address: "",
+        streetName: "",
+        zipcode: "",
         city: "",
-        postalCode: "",
         country: "",
         email: "",
         phone: "",
@@ -112,13 +112,24 @@ export function EditBusinessDialog({ open, onOpenChange, business, onSave }: Edi
             </div>
             
             <div className="col-span-2 space-y-2">
-              <Label htmlFor="address">Address</Label>
+              <Label htmlFor="streetName">Street Name</Label>
               <Input
-                id="address"
-                value={formData.address}
-                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                id="streetName"
+                value={formData.streetName}
+                onChange={(e) => setFormData({ ...formData, streetName: e.target.value })}
                 placeholder="123 Main St"
-                data-testid="input-address"
+                data-testid="input-street"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="zipcode">Zipcode</Label>
+              <Input
+                id="zipcode"
+                value={formData.zipcode}
+                onChange={(e) => setFormData({ ...formData, zipcode: e.target.value })}
+                placeholder="10001"
+                data-testid="input-zipcode"
               />
             </div>
             
@@ -130,17 +141,6 @@ export function EditBusinessDialog({ open, onOpenChange, business, onSave }: Edi
                 onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                 placeholder="New York"
                 data-testid="input-city"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="postalCode">Postal Code</Label>
-              <Input
-                id="postalCode"
-                value={formData.postalCode}
-                onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })}
-                placeholder="10001"
-                data-testid="input-postal"
               />
             </div>
             

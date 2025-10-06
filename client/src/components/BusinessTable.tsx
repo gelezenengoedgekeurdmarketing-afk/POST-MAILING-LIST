@@ -88,12 +88,19 @@ export function BusinessTable({ data, onEdit, onDelete, selectedIds, onSelection
       ),
     },
     {
-      accessorKey: "address",
-      header: "Address",
+      accessorKey: "streetName",
+      header: "Street Name",
       cell: ({ row }) => (
         <div className="text-muted-foreground text-data">
-          {row.getValue("address")}
+          {row.getValue("streetName")}
         </div>
+      ),
+    },
+    {
+      accessorKey: "zipcode",
+      header: "Zipcode",
+      cell: ({ row }) => (
+        <div className="text-data">{row.getValue("zipcode")}</div>
       ),
     },
     {
