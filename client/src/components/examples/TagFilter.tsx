@@ -21,6 +21,9 @@ export default function TagFilterExample() {
         onToggleTag={toggleTag}
         onClearAll={() => setSelectedTags([])}
       />
+      <p className="mt-4 text-sm text-muted-foreground">
+        Selected: {selectedTags.join(", ") || "None"}
+      </p>
     </div>
   );
 }
