@@ -14,6 +14,8 @@ export default function EditBusinessDialogExample() {
     email: "contact@acme.com",
     phone: "+1 234 567 8900",
     tags: ["Client", "VIP"],
+    comment: "Long-term partner, excellent payment history",
+    isActive: true,
   });
 
   return (

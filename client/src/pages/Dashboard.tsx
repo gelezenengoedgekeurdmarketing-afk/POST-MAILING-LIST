@@ -23,6 +23,8 @@ export default function Dashboard() {
       email: "contact@acme.com",
       phone: "+1 234 567 8900",
       tags: ["Client", "VIP"],
+      comment: "Long-term partner, excellent payment history",
+      isActive: true,
     },
     {
       id: "2",
@@ -34,6 +36,8 @@ export default function Dashboard() {
       email: "info@techsolutions.com",
       phone: "+1 415 555 0123",
       tags: ["Partner", "Technology"],
+      comment: "",
+      isActive: true,
     },
     {
       id: "3",
@@ -45,6 +49,8 @@ export default function Dashboard() {
       email: "hello@globalimports.com",
       phone: "+1 310 555 0456",
       tags: ["Supplier"],
+      comment: "Account on hold pending review",
+      isActive: false,
     },
   ]);
 

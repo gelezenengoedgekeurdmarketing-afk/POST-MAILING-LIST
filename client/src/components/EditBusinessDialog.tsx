@@ -11,6 +11,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { X } from "lucide-react";
 
 export interface Business {
@@ -23,6 +25,8 @@ export interface Business {
   email: string;
   phone: string;
   tags: string[];
+  comment: string;
+  isActive: boolean;
 }
 
 interface EditBusinessDialogProps {
@@ -43,6 +47,8 @@ export function EditBusinessDialog({ open, onOpenChange, business, onSave }: Edi
     email: "",
     phone: "",
     tags: [],
+    comment: "",
+    isActive: true,
   });
   const [tagInput, setTagInput] = useState("");
 
@@ -60,6 +66,8 @@ export function EditBusinessDialog({ open, onOpenChange, business, onSave }: Edi
         email: "",
         phone: "",
         tags: [],
+        comment: "",
+        isActive: true,
       });
     }
   }, [business]);
@@ -203,6 +211,34 @@ export function EditBusinessDialog({ open, onOpenChange, business, onSave }: Edi
                   ))}
                 </div>
               )}
+            </div>
+            
+            <div className="col-span-2 space-y-2">
+              <Label htmlFor="comment">Comment</Label>
+              <Textarea
+                id="comment"
+                value={formData.comment}
+                onChange={(e) => setFormData({ ...formData, comment: e.target.value })}
+                placeholder="Add any extra information about this business..."
+                className="resize-none"
+                rows={3}
+                data-testid="input-comment"
+              />
+            </div>
+            
+            <div className="col-span-2 flex items-center space-x-2">
+              <Checkbox
+                id="isActive"
+                checked={formData.isActive}
+                onCheckedChange={(checked) => setFormData({ ...formData, isActive: !!checked })}
+                data-testid="checkbox-active"
+              />
+              <Label
+                htmlFor="isActive"
+                className="text-sm font-normal cursor-pointer"
+              >
+                Active account
+              </Label>
             </div>
           </div>
         </div>

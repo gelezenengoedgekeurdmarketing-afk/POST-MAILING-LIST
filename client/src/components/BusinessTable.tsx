@@ -206,7 +206,7 @@ export function BusinessTable({ data, onEdit, onDelete, selectedIds, onSelection
               <TableRow
                 key={row.id}
                 data-state={selectedIds.includes(row.original.id) && "selected"}
-                className="hover-elevate"
+                className={`hover-elevate ${!row.original.isActive ? 'bg-destructive/10' : ''}`}
               >
                 {row.getVisibleCells().map((cell) => (
                   <TableCell key={cell.id}>

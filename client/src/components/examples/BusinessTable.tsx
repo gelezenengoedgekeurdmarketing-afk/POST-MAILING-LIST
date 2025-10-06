@@ -16,6 +16,8 @@ export default function BusinessTableExample() {
       email: "contact@acme.com",
       phone: "+1 234 567 8900",
       tags: ["Client", "VIP"],
+      comment: "Long-term partner",
+      isActive: true,
     },
     {
       id: "2",
@@ -27,6 +29,8 @@ export default function BusinessTableExample() {
       email: "info@techsolutions.com",
       phone: "+1 415 555 0123",
       tags: ["Partner", "Technology"],
+      comment: "",
+      isActive: true,
     },
     {
       id: "3",
@@ -38,6 +42,8 @@ export default function BusinessTableExample() {
       email: "hello@globalimports.com",
       phone: "+1 310 555 0456",
       tags: ["Supplier"],
+      comment: "Account on hold",
+      isActive: false,
     },
   ];
 
