@@ -4,7 +4,7 @@ import { storagePromise } from "./storage";
 import { insertBusinessSchema } from "@shared/schema";
 import multer from "multer";
 import * as XLSX from "xlsx";
-import { Document, Packer, Paragraph, TextRun, AlignmentType, HeadingLevel } from "docx";
+import { Document, Packer, Paragraph, TextRun, AlignmentType, HeadingLevel, Table, TableRow, TableCell, WidthType, BorderStyle } from "docx";
 // TODO: Uncomment when database is enabled
 // import { setupAuth, isAuthenticated } from "./replitAuth";
 
@@ -286,32 +286,83 @@ export async function registerRoutes(app: Express): Promise<Server> {
       XLSX.utils.book_append_sheet(workbook, worksheet, "Businesses");
 
       if (format === "word") {
-        // Create Word document with specific formatting
-        const sections = businessesToExport.map(business => {
-          return [
-            new Paragraph({
-              text: business.name,
-              heading: HeadingLevel.HEADING_2,
-              alignment: AlignmentType.CENTER,
-              spacing: { after: 200 },
-            }),
-            new Paragraph({
-              text: business.streetName,
-              alignment: AlignmentType.CENTER,
-              spacing: { after: 100 },
-            }),
-            new Paragraph({
-              text: `${business.zipcode} ${business.city}`,
-              alignment: AlignmentType.CENTER,
-              spacing: { after: 400 },
-            }),
-          ];
-        }).flat();
+        // Create Word document with 3-column table for mailing labels
+        const rows: TableRow[] = [];
+        
+        // Process businesses in groups of 3 for each row
+        for (let i = 0; i < businessesToExport.length; i += 3) {
+          const rowBusinesses = businessesToExport.slice(i, i + 3);
+          
+          // Create cells for this row
+          const cells = rowBusinesses.map(business => 
+            new TableCell({
+              children: [
+                new Paragraph({
+                  text: business.name,
+                  heading: HeadingLevel.HEADING_2,
+                  alignment: AlignmentType.CENTER,
+                  spacing: { after: 100 },
+                }),
+                new Paragraph({
+                  text: business.streetName,
+                  alignment: AlignmentType.CENTER,
+                  spacing: { after: 100 },
+                }),
+                new Paragraph({
+                  text: `${business.zipcode} ${business.city}`,
+                  alignment: AlignmentType.CENTER,
+                  spacing: { after: 200 },
+                }),
+              ],
+              width: {
+                size: 33,
+                type: WidthType.PERCENTAGE,
+              },
+              margins: {
+                top: 200,
+                bottom: 200,
+                left: 100,
+                right: 100,
+              },
+            })
+          );
+          
+          // Fill empty cells if less than 3 businesses in this row
+          while (cells.length < 3) {
+            cells.push(
+              new TableCell({
+                children: [new Paragraph({ text: "" })],
+                width: {
+                  size: 33,
+                  type: WidthType.PERCENTAGE,
+                },
+              })
+            );
+          }
+          
+          rows.push(new TableRow({ children: cells }));
+        }
+        
+        const table = new Table({
+          rows,
+          width: {
+            size: 100,
+            type: WidthType.PERCENTAGE,
+          },
+          borders: {
+            top: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" },
+            bottom: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" },
+            left: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" },
+            right: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" },
+            insideHorizontal: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" },
+            insideVertical: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" },
+          },
+        });
 
         const doc = new Document({
           sections: [{
             properties: {},
-            children: sections,
+            children: [table],
           }],
         });
 
