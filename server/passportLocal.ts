@@ -17,14 +17,22 @@ export async function setupLocalAuth(app: Express) {
       try {
         console.log('🔍 Login attempt for username:', username);
         
-        // Find user by username
+        // First, test raw query to verify connection
+        const { pool } = await import('./db');
+        const rawResult = await pool.query("SELECT * FROM users WHERE username = $1", [username]);
+        console.log('🔍 Raw SQL query result:', rawResult.rows.length, 'rows');
+        if (rawResult.rows.length > 0) {
+          console.log('🔍 Raw user data:', rawResult.rows[0]);
+        }
+        
+        // Find user by username using Drizzle
         const result = await db
           .select()
           .from(users)
           .where(eq(users.username, username))
           .limit(1);
         
-        console.log('🔍 Query result:', JSON.stringify(result, null, 2));
+        console.log('🔍 Drizzle query result:', JSON.stringify(result, null, 2));
         const [user] = result;
 
         console.log('🔍 User found:', user ? 'yes' : 'no');
