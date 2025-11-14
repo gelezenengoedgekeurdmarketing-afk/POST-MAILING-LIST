@@ -303,6 +303,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       XLSX.utils.book_append_sheet(workbook, worksheet, "Businesses");
 
       if (format === "word") {
+        // gunthergwashere
         // Avery Zweckform 3479 specifications:
         // - A4 page: 210mm × 297mm
         // - 27 labels per sheet: 3 columns × 9 rows
