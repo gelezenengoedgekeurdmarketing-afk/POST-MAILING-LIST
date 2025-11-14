@@ -315,20 +315,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
             new TableCell({
               children: [
                 new Paragraph({
-                  text: business.name,
-                  heading: HeadingLevel.HEADING_2,
-                  alignment: AlignmentType.CENTER,
-                  spacing: { after: 100 },
+                  text: business.name.toUpperCase(),
+                  alignment: AlignmentType.LEFT,
+                  spacing: { after: 100, before: 200 },
+                }),
+                new Paragraph({
+                  text: "",
+                  spacing: { after: 0 },
                 }),
                 new Paragraph({
                   text: business.streetName,
-                  alignment: AlignmentType.CENTER,
+                  alignment: AlignmentType.LEFT,
                   spacing: { after: 100 },
                 }),
                 new Paragraph({
+                  text: "",
+                  spacing: { after: 0 },
+                }),
+                new Paragraph({
                   text: `${business.zipcode} ${business.city}`,
-                  alignment: AlignmentType.CENTER,
+                  alignment: AlignmentType.LEFT,
                   spacing: { after: 200 },
+                }),
+                new Paragraph({
+                  text: "",
+                  spacing: { after: 0 },
+                }),
+                new Paragraph({
+                  text: "",
+                  spacing: { after: 400 },
                 }),
               ],
               width: {
@@ -336,10 +351,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 type: WidthType.PERCENTAGE,
               },
               margins: {
-                top: 200,
-                bottom: 200,
-                left: 100,
-                right: 100,
+                top: 100,
+                bottom: 100,
+                left: 200,
+                right: 200,
               },
             })
           );
@@ -367,12 +382,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
             type: WidthType.PERCENTAGE,
           },
           borders: {
-            top: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" },
-            bottom: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" },
-            left: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" },
-            right: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" },
-            insideHorizontal: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" },
-            insideVertical: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" },
+            top: { style: BorderStyle.NONE, size: 0 },
+            bottom: { style: BorderStyle.NONE, size: 0 },
+            left: { style: BorderStyle.NONE, size: 0 },
+            right: { style: BorderStyle.NONE, size: 0 },
+            insideHorizontal: { style: BorderStyle.NONE, size: 0 },
+            insideVertical: { style: BorderStyle.NONE, size: 0 },
           },
         });
 
