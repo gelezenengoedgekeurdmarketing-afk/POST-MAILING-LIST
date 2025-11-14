@@ -106,13 +106,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Coerce numeric values to strings (common in Excel exports)
           const toString = (val: any) => val !== null && val !== undefined ? String(val) : "";
           
-          // Honor per-row tags if present, otherwise use dialog tags
-          let rowTags = tags;
+          // Merge dialog tags WITH per-row tags from Categorie column
+          let rowTags = [...tags]; // Start with dialog tags
           const rowTagsField = row.tags || row.Tags || row.TAGS || row['(google) categorie'] || row.categorie || row.Categorie;
           if (rowTagsField) {
-            rowTags = Array.isArray(rowTagsField) 
+            const perRowTags = Array.isArray(rowTagsField) 
               ? rowTagsField 
               : toString(rowTagsField).split(',').map((t: string) => t.trim()).filter(Boolean);
+            // Merge tags, avoiding duplicates
+            rowTags = [...new Set([...rowTags, ...perRowTags])];
           }
           
           const business = {
@@ -121,7 +123,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             zipcode: toString(row.zipcode || row.zip || row.Zipcode || row.ZIP || row.postalCode || row.postal_code || row.PostalCode || row.PC || row.pc),
             city: toString(row.city || row.City || row.CITY || row.PLAATS || row.plaats || row.Plaats),
             country: toString(row.country || row.Country || row.COUNTRY || row.land || row.Land) || "Netherlands",
-            email: toString(row.email || row.Email || row.EMAIL || row['e-mail'] || row.mail) || `contact@business-${Date.now()}.example`,
+            email: toString(row.email || row.Email || row.EMAIL || row['e-mail'] || row.mail),
             phone: toString(row.phone || row.Phone || row.PHONE || row.telefoon || row.Telefoon || row.tel),
             tags: rowTags,
             comment: toString(row.comment || row.Comment || row.COMMENT || row.opmerking || row.Opmerking),
