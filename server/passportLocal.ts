@@ -15,60 +15,31 @@ export async function setupLocalAuth(app: Express) {
     },
     async (username, password, done) => {
       try {
-        console.log('🔍 Login attempt for username:', username);
-        
-        // First, test raw query to verify connection
-        const { pool } = await import('./db');
-        console.log('🔍 Database URL (masked):', process.env.DATABASE_URL?.replace(/:[^:]*@/, ':***@'));
-        
-        const dbCheck = await pool.query("SELECT current_database() as db");
-        console.log('🔍 Connected to database:', dbCheck.rows[0].db);
-        
-        const allUsers = await pool.query("SELECT username FROM users");
-        console.log('🔍 All usernames in database:', allUsers.rows.map(r => r.username));
-        
-        const rawResult = await pool.query("SELECT * FROM users WHERE username = $1", [username]);
-        console.log('🔍 Raw SQL query result:', rawResult.rows.length, 'rows');
-        if (rawResult.rows.length > 0) {
-          console.log('🔍 Raw user data:', rawResult.rows[0]);
-        }
-        
-        // Find user by username using Drizzle
-        const result = await db
+        // Find user by username
+        const [user] = await db
           .select()
           .from(users)
           .where(eq(users.username, username))
           .limit(1);
-        
-        console.log('🔍 Drizzle query result:', JSON.stringify(result, null, 2));
-        const [user] = result;
 
-        console.log('🔍 User found:', user ? 'yes' : 'no');
         if (!user) {
-          console.log('❌ User not found in database');
           return done(null, false, { message: 'Invalid username or password' });
         }
 
-        console.log('🔍 Has password hash:', user.passwordHash ? 'yes' : 'no');
         if (!user.passwordHash) {
-          console.log('❌ User has no password hash');
           return done(null, false, { message: 'Invalid username or password' });
         }
 
         // Verify password
-        console.log('🔍 Comparing password...');
         const isValidPassword = await bcrypt.compare(password, user.passwordHash);
-        console.log('🔍 Password valid:', isValidPassword);
         
         if (!isValidPassword) {
-          console.log('❌ Password mismatch');
           return done(null, false, { message: 'Invalid username or password' });
         }
 
-        console.log('✅ Login successful for user:', username);
         return done(null, user);
       } catch (error) {
-        console.error('❌ Login error:', error);
+        console.error('Login error:', error);
         return done(error);
       }
     }
