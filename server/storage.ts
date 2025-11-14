@@ -73,8 +73,6 @@ export class DatabaseStorage implements IStorage {
   }
 }
 
-// Using MemStorage until database is enabled
-// To use DatabaseStorage, enable the database endpoint in Replit workspace
 export class MemStorage implements IStorage {
   private businesses: Map<string, Business>;
 
@@ -153,4 +151,57 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+// Runtime storage selection based on database availability
+async function createStorage(): Promise<IStorage> {
+  // Check if database is available by trying an actual query
+  if (process.env.DATABASE_URL) {
+    try {
+      const { pool } = await import("./db");
+      if (!pool) {
+        throw new Error("Database pool not initialized");
+      }
+      const client = await pool.connect();
+      try {
+        // Try a simple query to verify the database is actually working
+        await client.query('SELECT 1');
+        console.log("✅ Database available - using DatabaseStorage");
+        return new DatabaseStorage();
+      } finally {
+        client.release();
+      }
+    } catch (error: any) {
+      const errorMsg = error?.message || String(error);
+      if (errorMsg.includes('endpoint has been disabled')) {
+        databaseDisabled = true; // Mark that endpoint is not enabled yet
+        console.warn("⚠️  Database endpoint is disabled - using MemStorage (data will be lost on restart)");
+        console.warn("   To enable persistent storage and login features:");
+        console.warn("   1. Open the Database tab in your Replit workspace");
+        console.warn("   2. Click 'Enable' to activate the database endpoint");
+      } else {
+        console.warn("⚠️  Database not available - using MemStorage (data will be lost on restart)");
+        console.warn("   Error:", errorMsg);
+      }
+    }
+  } else {
+    console.warn("⚠️  DATABASE_URL not set - using MemStorage (data will be lost on restart)");
+  }
+  return new MemStorage();
+}
+
+// Track database status
+export let databaseIntended = false;  // Was DATABASE_URL set?
+export let databaseAvailable = false; // Is database actually working?
+export let databaseDisabled = false;  // Was database endpoint explicitly disabled?
+
+// Export a promise that resolves to the storage instance
+export const storagePromise = (async () => {
+  const storageInstance = await createStorage();
+  databaseIntended = !!process.env.DATABASE_URL;
+  databaseAvailable = storageInstance.constructor.name === 'DatabaseStorage';
+  // databaseDisabled is set by createStorage if it detects "endpoint has been disabled"
+  return storageInstance;
+})();
+
+// For synchronous access (will throw if used before initialization)
+export let storage: IStorage;
+storagePromise.then(s => storage = s);

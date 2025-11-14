@@ -1,7 +1,15 @@
-import { pool } from "./db";
-
 export async function initDatabase() {
+  // Skip database initialization if DATABASE_URL is not set
+  if (!process.env.DATABASE_URL) {
+    return;
+  }
+
   try {
+    const { pool } = await import("./db");
+    if (!pool) {
+      return;
+    }
+    
     const client = await pool.connect();
     try {
       // Create sessions table for authentication
@@ -51,8 +59,7 @@ export async function initDatabase() {
       client.release();
     }
   } catch (error: any) {
-    console.warn("⚠️  Database not available (endpoint may be disabled). App will use in-memory storage.");
-    console.warn("   To enable persistent storage and login features, activate the database in your Replit workspace.");
     // Don't throw - allow app to continue with in-memory storage
+    // Error will be logged by storage initialization
   }
 }

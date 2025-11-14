@@ -1,6 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
+import { storagePromise } from "./storage";
 import { insertBusinessSchema } from "@shared/schema";
 import multer from "multer";
 import * as XLSX from "xlsx";
@@ -11,23 +11,55 @@ import { Document, Packer, Paragraph, TextRun, AlignmentType, HeadingLevel } fro
 export async function registerRoutes(app: Express): Promise<Server> {
   const upload = multer({ storage: multer.memoryStorage() });
   
-  // TODO: Set up authentication once database is enabled
-  // await setupAuth(app);
+  // Wait for storage to be initialized
+  const storage = await storagePromise;
+  const { databaseIntended, databaseAvailable, databaseDisabled } = await import("./storage");
+  
+  // Set up authentication only if using DatabaseStorage
+  if (databaseAvailable) {
+    const { setupAuth, isAuthenticated } = await import("./replitAuth");
+    await setupAuth(app);
+    
+    // Auth user endpoint (only available with database)
+    app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+      try {
+        const userId = req.user.claims.sub;
+        const user = await storage.getUser(userId);
+        res.json(user);
+      } catch (error) {
+        console.error("Error fetching user:", error);
+        res.status(500).json({ message: "Failed to fetch user" });
+      }
+    });
+    
+    console.log("🔐 Authentication enabled - database storage active");
+  } else if (databaseIntended && !databaseDisabled) {
+    // Database was configured and should be working, but isn't - this is a critical failure
+    console.error("❌ Database was configured but is unavailable - API will be restricted");
+    console.error("   The app will not allow unauthenticated access to protect your data");
+  } else {
+    console.log("⚠️  Authentication disabled - using in-memory storage");
+    console.log("   To enable login features, activate the database in your Replit workspace");
+  }
 
-  // TODO: Auth user endpoint (requires database)
-  // app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
-  //   try {
-  //     const userId = req.user.claims.sub;
-  //     const user = await storage.getUser(userId);
-  //     res.json(user);
-  //   } catch (error) {
-  //     console.error("Error fetching user:", error);
-  //     res.status(500).json({ message: "Failed to fetch user" });
-  //   }
-  // });
+  // Helper to conditionally apply auth middleware
+  // Three modes:
+  // 1. Database available → require authentication
+  // 2. Database intended but temporarily down (not disabled) → block all requests (fail closed)
+  // 3. Database not intended OR explicitly disabled → allow unauthenticated access
+  const authMiddleware = databaseAvailable
+    ? (await import("./replitAuth")).isAuthenticated 
+    : (databaseIntended && !databaseDisabled)
+    ? (_req: any, res: any, _next: any) => {
+        res.status(503).json({ 
+          error: "Service temporarily unavailable",
+          message: "Database connection required but unavailable" 
+        });
+      }
+    : (_req: any, _res: any, next: any) => next();
 
   // Get all businesses
-  app.get("/api/businesses", async (req, res) => {
+  app.get("/api/businesses", authMiddleware, async (req, res) => {
     try {
       const allBusinesses = await storage.getAllBusinesses();
       res.json(allBusinesses);
@@ -37,7 +69,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get business by ID
-  app.get("/api/businesses/:id", async (req, res) => {
+  app.get("/api/businesses/:id", authMiddleware, async (req, res) => {
     try {
       const business = await storage.getBusinessById(req.params.id);
       if (!business) {
@@ -50,7 +82,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Create a new business
-  app.post("/api/businesses", async (req, res) => {
+  app.post("/api/businesses", authMiddleware, async (req, res) => {
     try {
       const validatedData = insertBusinessSchema.parse(req.body);
       const newBusiness = await storage.createBusiness(validatedData);
@@ -61,7 +93,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update a business
-  app.patch("/api/businesses/:id", async (req, res) => {
+  app.patch("/api/businesses/:id", authMiddleware, async (req, res) => {
     try {
       const validatedData = insertBusinessSchema.partial().parse(req.body);
       const updatedBusiness = await storage.updateBusiness(req.params.id, validatedData);
@@ -75,7 +107,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Delete a business
-  app.delete("/api/businesses/:id", async (req, res) => {
+  app.delete("/api/businesses/:id", authMiddleware, async (req, res) => {
     try {
       const success = await storage.deleteBusiness(req.params.id);
       if (!success) {
@@ -88,7 +120,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Bulk create businesses (for import)
-  app.post("/api/businesses/bulk", async (req, res) => {
+  app.post("/api/businesses/bulk", authMiddleware, async (req, res) => {
     try {
       const { businesses: businessList } = req.body;
       if (!Array.isArray(businessList)) {
@@ -102,8 +134,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Import Excel/CSV file
-  app.post("/api/import", upload.single("file"), async (req, res) => {
+  // Import Excel/CSV file (auth runs before file upload)
+  app.post("/api/import", (req, res, next) => {
+    // Run auth first, before multer processes the file
+    authMiddleware(req, res, (err?: any) => {
+      if (err) return next(err);
+      // Only process file upload if authenticated
+      upload.single("file")(req, res, next);
+    });
+  }, async (req, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ error: "No file uploaded" });
@@ -194,7 +233,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Export businesses to Excel/CSV
-  app.post("/api/export", async (req, res) => {
+  app.post("/api/export", authMiddleware, async (req, res) => {
     try {
       const { format, ids } = req.body;
       
