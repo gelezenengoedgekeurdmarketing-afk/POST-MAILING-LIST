@@ -281,7 +281,7 @@ export function BusinessTable({ data, onEdit, onDelete, selectedIds, onSelection
         return (
           <div
             className="text-muted-foreground text-sm cursor-pointer hover-elevate rounded border border-border px-2 py-1 min-h-8 flex items-center"
-            onDoubleClick={() => handleCommentEdit(business.id, business.comment || '')}
+            onClick={() => handleCommentEdit(business.id, business.comment || '')}
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
