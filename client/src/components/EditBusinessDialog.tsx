@@ -51,6 +51,7 @@ export function EditBusinessDialog({ open, onOpenChange, business, onSave }: Edi
     isActive: true,
   });
   const [tagInput, setTagInput] = useState("");
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (business) {
@@ -70,7 +71,8 @@ export function EditBusinessDialog({ open, onOpenChange, business, onSave }: Edi
         isActive: true,
       });
     }
-  }, [business]);
+    setErrors({});
+  }, [business, open]);
 
   const handleAddTag = () => {
     if (tagInput.trim() && !formData.tags.includes(tagInput.trim())) {
@@ -83,9 +85,38 @@ export function EditBusinessDialog({ open, onOpenChange, business, onSave }: Edi
     setFormData({ ...formData, tags: formData.tags.filter(t => t !== tag) });
   };
 
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.name.trim()) {
+      newErrors.name = "Business name is required";
+    }
+    if (!formData.streetName.trim()) {
+      newErrors.streetName = "Street name is required";
+    }
+    if (!formData.zipcode.trim()) {
+      newErrors.zipcode = "Zipcode is required";
+    }
+    if (!formData.city.trim()) {
+      newErrors.city = "City is required";
+    }
+    if (!formData.country.trim()) {
+      newErrors.country = "Country is required";
+    }
+    if (!formData.email.trim()) {
+      newErrors.email = "Email is required";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = "Invalid email format";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSave = () => {
-    onSave(formData);
-    onOpenChange(false);
+    if (validateForm()) {
+      onSave(formData);
+    }
   };
 
   return (
@@ -101,62 +132,72 @@ export function EditBusinessDialog({ open, onOpenChange, business, onSave }: Edi
         <div className="space-y-4 py-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2 space-y-2">
-              <Label htmlFor="name">Business Name</Label>
+              <Label htmlFor="name">Business Name *</Label>
               <Input
                 id="name"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="Company Inc."
                 data-testid="input-name"
+                className={errors.name ? "border-destructive" : ""}
               />
+              {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
             </div>
             
             <div className="col-span-2 space-y-2">
-              <Label htmlFor="streetName">Street Name</Label>
+              <Label htmlFor="streetName">Street Name *</Label>
               <Input
                 id="streetName"
                 value={formData.streetName}
                 onChange={(e) => setFormData({ ...formData, streetName: e.target.value })}
                 placeholder="123 Main St"
                 data-testid="input-street"
+                className={errors.streetName ? "border-destructive" : ""}
               />
+              {errors.streetName && <p className="text-xs text-destructive">{errors.streetName}</p>}
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="zipcode">Zipcode</Label>
+              <Label htmlFor="zipcode">Zipcode *</Label>
               <Input
                 id="zipcode"
                 value={formData.zipcode}
                 onChange={(e) => setFormData({ ...formData, zipcode: e.target.value })}
                 placeholder="10001"
                 data-testid="input-zipcode"
+                className={errors.zipcode ? "border-destructive" : ""}
               />
+              {errors.zipcode && <p className="text-xs text-destructive">{errors.zipcode}</p>}
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="city">City</Label>
+              <Label htmlFor="city">City *</Label>
               <Input
                 id="city"
                 value={formData.city}
                 onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                 placeholder="New York"
                 data-testid="input-city"
+                className={errors.city ? "border-destructive" : ""}
               />
+              {errors.city && <p className="text-xs text-destructive">{errors.city}</p>}
             </div>
             
             <div className="col-span-2 space-y-2">
-              <Label htmlFor="country">Country</Label>
+              <Label htmlFor="country">Country *</Label>
               <Input
                 id="country"
                 value={formData.country}
                 onChange={(e) => setFormData({ ...formData, country: e.target.value })}
                 placeholder="United States"
                 data-testid="input-country"
+                className={errors.country ? "border-destructive" : ""}
               />
+              {errors.country && <p className="text-xs text-destructive">{errors.country}</p>}
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">Email *</Label>
               <Input
                 id="email"
                 type="email"
@@ -164,7 +205,9 @@ export function EditBusinessDialog({ open, onOpenChange, business, onSave }: Edi
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 placeholder="contact@company.com"
                 data-testid="input-email"
+                className={errors.email ? "border-destructive" : ""}
               />
+              {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
             </div>
             
             <div className="space-y-2">

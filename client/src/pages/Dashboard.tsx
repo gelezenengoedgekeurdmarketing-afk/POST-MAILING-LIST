@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Plus, Upload, Download } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -10,50 +11,14 @@ import { ImportDialog } from "@/components/ImportDialog";
 import { ExportDialog } from "@/components/ExportDialog";
 import { EditBusinessDialog, type Business } from "@/components/EditBusinessDialog";
 import { useToast } from "@/hooks/use-toast";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 
 export default function Dashboard() {
   const { toast } = useToast();
-  const [businesses, setBusinesses] = useState<Business[]>([
-    {
-      id: "1",
-      name: "Acme Corporation",
-      streetName: "123 Business St",
-      zipcode: "10001",
-      city: "New York",
-      country: "United States",
-      email: "contact@acme.com",
-      phone: "+1 234 567 8900",
-      tags: ["Client", "VIP"],
-      comment: "Long-term partner, excellent payment history",
-      isActive: true,
-    },
-    {
-      id: "2",
-      name: "Tech Solutions Ltd",
-      streetName: "456 Innovation Ave",
-      zipcode: "94105",
-      city: "San Francisco",
-      country: "United States",
-      email: "info@techsolutions.com",
-      phone: "+1 415 555 0123",
-      tags: ["Partner", "Technology"],
-      comment: "",
-      isActive: true,
-    },
-    {
-      id: "3",
-      name: "Global Imports Co",
-      streetName: "789 Trade Blvd",
-      zipcode: "90001",
-      city: "Los Angeles",
-      country: "United States",
-      email: "hello@globalimports.com",
-      phone: "+1 310 555 0456",
-      tags: ["Supplier"],
-      comment: "Account on hold pending review",
-      isActive: false,
-    },
-  ]);
+  
+  const { data: businesses = [], isLoading } = useQuery<Business[]>({
+    queryKey: ["/api/businesses"],
+  });
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -63,6 +28,91 @@ export default function Dashboard() {
   const [exportOpen, setExportOpen] = useState(false);
   const [editBusiness, setEditBusiness] = useState<Business | null>(null);
   const [editOpen, setEditOpen] = useState(false);
+
+  const createBusinessMutation = useMutation({
+    mutationFn: async (business: Omit<Business, "id">) => {
+      const res = await apiRequest("POST", "/api/businesses", business);
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/businesses"] });
+      toast({
+        title: "Success",
+        description: "Business added successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add business",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateBusinessMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Partial<Omit<Business, "id">> }) => {
+      const res = await apiRequest("PATCH", `/api/businesses/${id}`, data);
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/businesses"] });
+      toast({
+        title: "Success",
+        description: "Business updated successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update business",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteBusinessMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await apiRequest("DELETE", `/api/businesses/${id}`);
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/businesses"] });
+      setSelectedIds([]);
+      toast({
+        title: "Success",
+        description: "Business deleted successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete business",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const bulkCreateMutation = useMutation({
+    mutationFn: async (businessList: Omit<Business, "id">[]) => {
+      const res = await apiRequest("POST", "/api/businesses/bulk", { businesses: businessList });
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/businesses"] });
+      toast({
+        title: "Import successful",
+        description: "Businesses imported successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Import failed",
+        description: error.message || "Failed to import businesses",
+        variant: "destructive",
+      });
+    },
+  });
 
   const allTags = useMemo(() => {
     const tagSet = new Set<string>();
@@ -99,51 +149,135 @@ export default function Dashboard() {
     });
   }, [businesses, searchQuery, selectedTags, selectedZipcodes]);
 
-  const handleImport = (file: File, tags: string[]) => {
-    console.log("Import file:", file.name, "with tags:", tags);
-    toast({
-      title: "Import started",
-      description: `Importing data from ${file.name}...`,
-    });
-  };
+  const handleImport = async (file: File, tags: string[]) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("tags", JSON.stringify(tags));
 
-  const handleExport = (format: string, type: string) => {
-    console.log("Export format:", format, "type:", type);
-    toast({
-      title: "Export started",
-      description: `Exporting data as ${format.toUpperCase()}...`,
-    });
-  };
-
-  const handleSaveBusiness = (business: Business) => {
-    if (business.id) {
-      setBusinesses(businesses.map(b => b.id === business.id ? business : b));
-      toast({
-        title: "Business updated",
-        description: "The business information has been updated.",
+    try {
+      const response = await fetch("/api/import", {
+        method: "POST",
+        body: formData,
       });
-    } else {
-      const newBusiness = { ...business, id: String(Date.now()) };
-      setBusinesses([...businesses, newBusiness]);
+
+      if (!response.ok && response.status !== 207) {
+        const error = await response.json();
+        throw new Error(error.error || "Import failed");
+      }
+
+      const result = await response.json();
+      queryClient.invalidateQueries({ queryKey: ["/api/businesses"] });
+      
+      if (result.failed > 0) {
+        toast({
+          title: "Partial import",
+          description: `Imported ${result.imported} businesses. ${result.failed} rows failed. Check console for details.`,
+          variant: "destructive",
+        });
+        console.error("Import errors:", result.errors);
+      } else {
+        toast({
+          title: "Import successful",
+          description: `Imported ${result.imported} businesses`,
+        });
+      }
+      setImportOpen(false);
+    } catch (error: any) {
       toast({
-        title: "Business added",
-        description: "A new business has been added to the database.",
+        title: "Import failed",
+        description: error.message || "Failed to import businesses",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleExport = async (format: string, type: string) => {
+    const ids = type === "selected" ? selectedIds : undefined;
+    
+    try {
+      const response = await fetch("/api/export", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ format, ids }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Export failed");
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = format === "csv" || format === "mailinglist" ? "businesses.csv" : "businesses.xlsx";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+
+      toast({
+        title: "Export successful",
+        description: `Exported businesses as ${format}`,
+      });
+      setExportOpen(false);
+    } catch (error: any) {
+      toast({
+        title: "Export failed",
+        description: error.message || "Failed to export businesses",
+        variant: "destructive",
       });
     }
   };
 
   const handleDeleteBusiness = (id: string) => {
-    setBusinesses(businesses.filter(b => b.id !== id));
-    setSelectedIds(selectedIds.filter(selectedId => selectedId !== id));
-    toast({
-      title: "Business deleted",
-      description: "The business has been removed from the database.",
+    deleteBusinessMutation.mutate(id);
+  };
+
+  const handleDeleteSelected = () => {
+    if (selectedIds.length === 0) return;
+    
+    Promise.all(selectedIds.map(id => 
+      apiRequest("DELETE", `/api/businesses/${id}`)
+    )).then(() => {
+      queryClient.invalidateQueries({ queryKey: ["/api/businesses"] });
+      setSelectedIds([]);
+      toast({
+        title: "Success",
+        description: `${selectedIds.length} businesses deleted successfully`,
+      });
+    }).catch((error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete businesses",
+        variant: "destructive",
+      });
     });
   };
 
   const handleAddNew = () => {
     setEditBusiness(null);
     setEditOpen(true);
+  };
+
+  const handleSaveBusiness = (business: Business) => {
+    if (business.id) {
+      const { id, ...data } = business;
+      updateBusinessMutation.mutate({ id, data }, {
+        onSuccess: () => {
+          setEditOpen(false);
+        },
+      });
+    } else {
+      const { id, ...data } = business;
+      createBusinessMutation.mutate(data, {
+        onSuccess: () => {
+          setEditOpen(false);
+        },
+      });
+    }
   };
 
   const handleEdit = (business: Business) => {
@@ -166,6 +300,14 @@ export default function Dashboard() {
       setSelectedZipcodes([...selectedZipcodes, zipcode]);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">

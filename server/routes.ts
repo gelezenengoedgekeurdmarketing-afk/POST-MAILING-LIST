@@ -1,13 +1,224 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { insertBusinessSchema } from "@shared/schema";
+import multer from "multer";
+import * as XLSX from "xlsx";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // put application routes here
-  // prefix all routes with /api
+  const upload = multer({ storage: multer.memoryStorage() });
+  // Get all businesses
+  app.get("/api/businesses", async (req, res) => {
+    try {
+      const allBusinesses = await storage.getAllBusinesses();
+      res.json(allBusinesses);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
 
-  // use storage to perform CRUD operations on the storage interface
-  // e.g. storage.insertUser(user) or storage.getUserByUsername(username)
+  // Get business by ID
+  app.get("/api/businesses/:id", async (req, res) => {
+    try {
+      const business = await storage.getBusinessById(req.params.id);
+      if (!business) {
+        return res.status(404).json({ error: "Business not found" });
+      }
+      res.json(business);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Create a new business
+  app.post("/api/businesses", async (req, res) => {
+    try {
+      const validatedData = insertBusinessSchema.parse(req.body);
+      const newBusiness = await storage.createBusiness(validatedData);
+      res.status(201).json(newBusiness);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // Update a business
+  app.patch("/api/businesses/:id", async (req, res) => {
+    try {
+      const validatedData = insertBusinessSchema.partial().parse(req.body);
+      const updatedBusiness = await storage.updateBusiness(req.params.id, validatedData);
+      if (!updatedBusiness) {
+        return res.status(404).json({ error: "Business not found" });
+      }
+      res.json(updatedBusiness);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // Delete a business
+  app.delete("/api/businesses/:id", async (req, res) => {
+    try {
+      const success = await storage.deleteBusiness(req.params.id);
+      if (!success) {
+        return res.status(404).json({ error: "Business not found" });
+      }
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Bulk create businesses (for import)
+  app.post("/api/businesses/bulk", async (req, res) => {
+    try {
+      const { businesses: businessList } = req.body;
+      if (!Array.isArray(businessList)) {
+        return res.status(400).json({ error: "businesses must be an array" });
+      }
+      const validatedBusinesses = businessList.map(b => insertBusinessSchema.parse(b));
+      const createdBusinesses = await storage.createBusinesses(validatedBusinesses);
+      res.status(201).json(createdBusinesses);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // Import Excel/CSV file
+  app.post("/api/import", upload.single("file"), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No file uploaded" });
+      }
+
+      const tags = req.body.tags ? JSON.parse(req.body.tags) : [];
+
+      const workbook = XLSX.read(req.file.buffer, { type: "buffer" });
+      const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+      const data = XLSX.utils.sheet_to_json(firstSheet);
+
+      const results = {
+        success: [] as any[],
+        errors: [] as any[],
+      };
+
+      data.forEach((row: any, index: number) => {
+        try {
+          // Coerce numeric values to strings (common in Excel exports)
+          const toString = (val: any) => val !== null && val !== undefined ? String(val) : "";
+          
+          // Honor per-row tags if present, otherwise use dialog tags
+          let rowTags = tags;
+          const rowTagsField = row.tags || row.Tags || row.TAGS;
+          if (rowTagsField) {
+            rowTags = Array.isArray(rowTagsField) 
+              ? rowTagsField 
+              : toString(rowTagsField).split(',').map((t: string) => t.trim()).filter(Boolean);
+          }
+          
+          const business = {
+            name: toString(row.name || row.Name || row.NAME),
+            streetName: toString(row.streetName || row.street_name || row.StreetName || row.address || row.Address || row.ADDRESS),
+            zipcode: toString(row.zipcode || row.zip || row.Zipcode || row.ZIP || row.postalCode || row.postal_code || row.PostalCode),
+            city: toString(row.city || row.City || row.CITY),
+            country: toString(row.country || row.Country || row.COUNTRY),
+            email: toString(row.email || row.Email || row.EMAIL),
+            phone: toString(row.phone || row.Phone || row.PHONE),
+            tags: rowTags,
+            comment: toString(row.comment || row.Comment || row.COMMENT),
+            isActive: row.isActive !== undefined ? row.isActive : (row.is_active !== undefined ? row.is_active : true),
+          };
+
+          // Validate required fields before attempting to parse
+          const missingFields = [];
+          if (!business.name) missingFields.push("name");
+          if (!business.streetName) missingFields.push("streetName");
+          if (!business.zipcode) missingFields.push("zipcode");
+          if (!business.city) missingFields.push("city");
+          if (!business.country) missingFields.push("country");
+          if (!business.email) missingFields.push("email");
+
+          if (missingFields.length > 0) {
+            results.errors.push({
+              row: index + 2, // +2 because Excel rows are 1-indexed and first row is header
+              data: row,
+              error: `Missing required fields: ${missingFields.join(", ")}`,
+            });
+          } else {
+            const validated = insertBusinessSchema.parse(business);
+            results.success.push(validated);
+          }
+        } catch (error: any) {
+          results.errors.push({
+            row: index + 2,
+            data: row,
+            error: error.message,
+          });
+        }
+      });
+
+      // Create businesses for successful rows
+      let createdBusinesses: any[] = [];
+      if (results.success.length > 0) {
+        createdBusinesses = await storage.createBusinesses(results.success);
+      }
+
+      res.status(results.errors.length > 0 ? 207 : 201).json({
+        success: results.errors.length === 0,
+        imported: createdBusinesses.length,
+        failed: results.errors.length,
+        businesses: createdBusinesses,
+        errors: results.errors,
+      });
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // Export businesses to Excel/CSV
+  app.post("/api/export", async (req, res) => {
+    try {
+      const { format, ids } = req.body;
+      
+      let businessesToExport;
+      if (ids && Array.isArray(ids) && ids.length > 0) {
+        const allBusinesses = await storage.getAllBusinesses();
+        businessesToExport = allBusinesses.filter(b => ids.includes(b.id));
+      } else {
+        businessesToExport = await storage.getAllBusinesses();
+      }
+
+      const data = businessesToExport.map(b => ({
+        Name: b.name,
+        "Street Name": b.streetName,
+        Zipcode: b.zipcode,
+        City: b.city,
+        Country: b.country,
+        Email: b.email,
+        Phone: b.phone || '',
+        Tags: (b.tags || []).join(", "),
+        Comment: b.comment || '',
+        Active: b.isActive ? "Yes" : "No",
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(data);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Businesses");
+
+      if (format === "csv" || format === "mailinglist") {
+        const csv = XLSX.utils.sheet_to_csv(worksheet);
+        res.setHeader("Content-Type", "text/csv");
+        res.setHeader("Content-Disposition", 'attachment; filename="businesses.csv"');
+        res.send(csv);
+      } else {
+        const buffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" });
+        res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        res.setHeader("Content-Disposition", 'attachment; filename="businesses.xlsx"');
+        res.send(buffer);
+      }
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
 
   const httpServer = createServer(app);
 
