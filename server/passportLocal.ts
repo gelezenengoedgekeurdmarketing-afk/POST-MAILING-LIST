@@ -19,6 +19,14 @@ export async function setupLocalAuth(app: Express) {
         
         // First, test raw query to verify connection
         const { pool } = await import('./db');
+        console.log('🔍 Database URL (masked):', process.env.DATABASE_URL?.replace(/:[^:]*@/, ':***@'));
+        
+        const dbCheck = await pool.query("SELECT current_database() as db");
+        console.log('🔍 Connected to database:', dbCheck.rows[0].db);
+        
+        const allUsers = await pool.query("SELECT username FROM users");
+        console.log('🔍 All usernames in database:', allUsers.rows.map(r => r.username));
+        
         const rawResult = await pool.query("SELECT * FROM users WHERE username = $1", [username]);
         console.log('🔍 Raw SQL query result:', rawResult.rows.length, 'rows');
         if (rawResult.rows.length > 0) {
