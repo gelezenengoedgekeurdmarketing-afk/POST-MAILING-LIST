@@ -18,11 +18,14 @@ export async function setupLocalAuth(app: Express) {
         console.log('🔍 Login attempt for username:', username);
         
         // Find user by username
-        const [user] = await db
+        const result = await db
           .select()
           .from(users)
           .where(eq(users.username, username))
           .limit(1);
+        
+        console.log('🔍 Query result:', JSON.stringify(result, null, 2));
+        const [user] = result;
 
         console.log('🔍 User found:', user ? 'yes' : 'no');
         if (!user) {
