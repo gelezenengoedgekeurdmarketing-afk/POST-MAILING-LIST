@@ -18,7 +18,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication only if using DatabaseStorage
   if (databaseAvailable) {
     const { setupAuth, isAuthenticated } = await import("./replitAuth");
+    const { setupLocalAuth, isAuthenticatedLocal } = await import("./passportLocal");
+    
     await setupAuth(app);
+    await setupLocalAuth(app);
     
     // Auth user endpoint (only available with database)
     app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
@@ -33,6 +36,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
     
     console.log("🔐 Authentication enabled - database storage active");
+    console.log("🔑 Local username/password login available");
   } else if (databaseIntended && !databaseDisabled) {
     // Database was configured and should be working, but isn't - this is a critical failure
     console.error("❌ Database was configured but is unavailable - API will be restricted");
@@ -44,11 +48,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Helper to conditionally apply auth middleware
   // Three modes:
-  // 1. Database available → require authentication
+  // 1. Database available → require authentication (works with both Replit Auth and Local)
   // 2. Database intended but temporarily down (not disabled) → block all requests (fail closed)
   // 3. Database not intended OR explicitly disabled → allow unauthenticated access
   const authMiddleware = databaseAvailable
-    ? (await import("./replitAuth")).isAuthenticated 
+    ? (await import("./passportLocal")).isAuthenticatedLocal 
     : (databaseIntended && !databaseDisabled)
     ? (_req: any, res: any, _next: any) => {
         res.status(503).json({ 
