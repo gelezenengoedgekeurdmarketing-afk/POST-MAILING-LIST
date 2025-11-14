@@ -38,8 +38,8 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  // Initialize database tables
-  await initDatabase();
+  // TODO: Initialize database tables when database is enabled
+  // await initDatabase();
   
   const server = await registerRoutes(app);
 

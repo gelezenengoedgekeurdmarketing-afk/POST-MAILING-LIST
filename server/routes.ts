@@ -5,28 +5,29 @@ import { insertBusinessSchema } from "@shared/schema";
 import multer from "multer";
 import * as XLSX from "xlsx";
 import { Document, Packer, Paragraph, TextRun, AlignmentType, HeadingLevel } from "docx";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+// TODO: Uncomment when database is enabled
+// import { setupAuth, isAuthenticated } from "./replitAuth";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const upload = multer({ storage: multer.memoryStorage() });
   
-  // Set up authentication
-  await setupAuth(app);
+  // TODO: Set up authentication once database is enabled
+  // await setupAuth(app);
 
-  // Auth user endpoint
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      res.json(user);
-    } catch (error) {
-      console.error("Error fetching user:", error);
-      res.status(500).json({ message: "Failed to fetch user" });
-    }
-  });
+  // TODO: Auth user endpoint (requires database)
+  // app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+  //   try {
+  //     const userId = req.user.claims.sub;
+  //     const user = await storage.getUser(userId);
+  //     res.json(user);
+  //   } catch (error) {
+  //     console.error("Error fetching user:", error);
+  //     res.status(500).json({ message: "Failed to fetch user" });
+  //   }
+  // });
 
-  // Get all businesses (protected)
-  app.get("/api/businesses", isAuthenticated, async (req, res) => {
+  // Get all businesses
+  app.get("/api/businesses", async (req, res) => {
     try {
       const allBusinesses = await storage.getAllBusinesses();
       res.json(allBusinesses);
@@ -35,8 +36,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get business by ID (protected)
-  app.get("/api/businesses/:id", isAuthenticated, async (req, res) => {
+  // Get business by ID
+  app.get("/api/businesses/:id", async (req, res) => {
     try {
       const business = await storage.getBusinessById(req.params.id);
       if (!business) {
@@ -48,8 +49,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Create a new business (protected)
-  app.post("/api/businesses", isAuthenticated, async (req, res) => {
+  // Create a new business
+  app.post("/api/businesses", async (req, res) => {
     try {
       const validatedData = insertBusinessSchema.parse(req.body);
       const newBusiness = await storage.createBusiness(validatedData);
@@ -59,8 +60,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Update a business (protected)
-  app.patch("/api/businesses/:id", isAuthenticated, async (req, res) => {
+  // Update a business
+  app.patch("/api/businesses/:id", async (req, res) => {
     try {
       const validatedData = insertBusinessSchema.partial().parse(req.body);
       const updatedBusiness = await storage.updateBusiness(req.params.id, validatedData);
@@ -73,8 +74,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Delete a business (protected)
-  app.delete("/api/businesses/:id", isAuthenticated, async (req, res) => {
+  // Delete a business
+  app.delete("/api/businesses/:id", async (req, res) => {
     try {
       const success = await storage.deleteBusiness(req.params.id);
       if (!success) {
@@ -86,8 +87,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Bulk create businesses (for import) (protected)
-  app.post("/api/businesses/bulk", isAuthenticated, async (req, res) => {
+  // Bulk create businesses (for import)
+  app.post("/api/businesses/bulk", async (req, res) => {
     try {
       const { businesses: businessList } = req.body;
       if (!Array.isArray(businessList)) {
