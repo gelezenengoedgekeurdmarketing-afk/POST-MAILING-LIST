@@ -114,7 +114,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
               ? rowTagsField 
               : toString(rowTagsField).split(',').map((t: string) => t.trim()).filter(Boolean);
             // Merge tags, avoiding duplicates
-            rowTags = [...new Set([...rowTags, ...perRowTags])];
+            const mergedSet = new Set([...rowTags, ...perRowTags]);
+            rowTags = Array.from(mergedSet);
           }
           
           const business = {
@@ -122,7 +123,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
             streetName: toString(row.streetName || row.street_name || row.StreetName || row.address || row.Address || row.ADDRESS || row.adresregel || row.Adresregel || row['Adresregel 1'] || row['adresregel 1']),
             zipcode: toString(row.zipcode || row.zip || row.Zipcode || row.ZIP || row.postalCode || row.postal_code || row.PostalCode || row.PC || row.pc),
             city: toString(row.city || row.City || row.CITY || row.PLAATS || row.plaats || row.Plaats),
-            country: toString(row.country || row.Country || row.COUNTRY || row.land || row.Land) || "Netherlands",
             email: toString(row.email || row.Email || row.EMAIL || row['e-mail'] || row.mail),
             phone: toString(row.phone || row.Phone || row.PHONE || row.telefoon || row.Telefoon || row.tel),
             tags: rowTags,
@@ -136,8 +136,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (!business.streetName) missingFields.push("streetName");
           if (!business.zipcode) missingFields.push("zipcode");
           if (!business.city) missingFields.push("city");
-          if (!business.country) missingFields.push("country");
-          if (!business.email) missingFields.push("email");
 
           if (missingFields.length > 0) {
             results.errors.push({
@@ -194,7 +192,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         "Street Name": b.streetName,
         Zipcode: b.zipcode,
         City: b.city,
-        Country: b.country,
         Email: b.email,
         Phone: b.phone || '',
         Tags: (b.tags || []).join(", "),

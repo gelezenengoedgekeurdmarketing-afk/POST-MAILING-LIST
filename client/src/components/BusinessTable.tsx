@@ -111,13 +111,6 @@ export function BusinessTable({ data, onEdit, onDelete, selectedIds, onSelection
       ),
     },
     {
-      accessorKey: "country",
-      header: "Country",
-      cell: ({ row }) => (
-        <div className="text-data">{row.getValue("country")}</div>
-      ),
-    },
-    {
       accessorKey: "email",
       header: "Email",
       cell: ({ row }) => (

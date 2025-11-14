@@ -21,7 +21,6 @@ export interface Business {
   streetName: string;
   zipcode: string;
   city: string;
-  country: string;
   email: string;
   phone: string;
   tags: string[];
@@ -43,7 +42,6 @@ export function EditBusinessDialog({ open, onOpenChange, business, onSave }: Edi
     streetName: "",
     zipcode: "",
     city: "",
-    country: "",
     email: "",
     phone: "",
     tags: [],
@@ -63,7 +61,6 @@ export function EditBusinessDialog({ open, onOpenChange, business, onSave }: Edi
         streetName: "",
         zipcode: "",
         city: "",
-        country: "",
         email: "",
         phone: "",
         tags: [],
@@ -100,12 +97,7 @@ export function EditBusinessDialog({ open, onOpenChange, business, onSave }: Edi
     if (!formData.city.trim()) {
       newErrors.city = "City is required";
     }
-    if (!formData.country.trim()) {
-      newErrors.country = "Country is required";
-    }
-    if (!formData.email.trim()) {
-      newErrors.email = "Email is required";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+    if (formData.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = "Invalid email format";
     }
 
@@ -183,21 +175,8 @@ export function EditBusinessDialog({ open, onOpenChange, business, onSave }: Edi
               {errors.city && <p className="text-xs text-destructive">{errors.city}</p>}
             </div>
             
-            <div className="col-span-2 space-y-2">
-              <Label htmlFor="country">Country *</Label>
-              <Input
-                id="country"
-                value={formData.country}
-                onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-                placeholder="United States"
-                data-testid="input-country"
-                className={errors.country ? "border-destructive" : ""}
-              />
-              {errors.country && <p className="text-xs text-destructive">{errors.country}</p>}
-            </div>
-            
             <div className="space-y-2">
-              <Label htmlFor="email">Email *</Label>
+              <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
                 type="email"
