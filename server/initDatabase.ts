@@ -33,10 +33,38 @@ export async function initDatabase() {
           first_name VARCHAR,
           last_name VARCHAR,
           profile_image_url VARCHAR,
+          username VARCHAR UNIQUE,
+          password_hash VARCHAR,
           created_at TIMESTAMP DEFAULT NOW(),
           updated_at TIMESTAMP DEFAULT NOW()
         );
       `);
+      
+      // Add username and password_hash columns if they don't exist (for existing databases)
+      await client.query(`
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS username VARCHAR UNIQUE;
+      `);
+      await client.query(`
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash VARCHAR;
+      `);
+      
+      // Seed admin user if credentials are provided
+      if (process.env.LOCAL_ADMIN_USERNAME && process.env.LOCAL_ADMIN_PASSWORD) {
+        const bcrypt = await import('bcryptjs');
+        const username = process.env.LOCAL_ADMIN_USERNAME;
+        const hashedPassword = await bcrypt.hash(process.env.LOCAL_ADMIN_PASSWORD, 10);
+        
+        // Insert or update admin user
+        await client.query(`
+          INSERT INTO users (username, password_hash, first_name, last_name, email)
+          VALUES ($1, $2, 'Admin', 'User', $3)
+          ON CONFLICT (username) DO UPDATE
+          SET password_hash = EXCLUDED.password_hash,
+              updated_at = NOW()
+        `, [username, hashedPassword, `${username}@local`]);
+        
+        console.log(`✅ Admin user '${username}' initialized`);
+      }
 
       // Create businesses table
       await client.query(`
