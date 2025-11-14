@@ -3,6 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Plus, Upload, Download } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { HeaderUserMenu } from "@/components/HeaderUserMenu";
 import { SearchBar } from "@/components/SearchBar";
 import { TagFilter } from "@/components/TagFilter";
 import { ZipcodeFilter } from "@/components/ZipcodeFilter";
@@ -344,6 +345,7 @@ export default function Dashboard() {
                 Add Business
               </Button>
               <ThemeToggle />
+              <HeaderUserMenu />
             </div>
           </div>
         </div>
