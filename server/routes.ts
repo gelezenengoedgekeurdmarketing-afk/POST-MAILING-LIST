@@ -276,8 +276,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           maxWidth = Math.max(maxWidth, cellLength);
         });
         
-        // Add some padding and set reasonable min/max
-        return { wch: Math.min(Math.max(maxWidth + 2, 10), 50) };
+        // Add padding for better readability, with minimum width
+        return { wch: Math.max(maxWidth + 3, 12) };
       });
       
       worksheet['!cols'] = columnWidths;
