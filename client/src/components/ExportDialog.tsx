@@ -55,6 +55,12 @@ export function ExportDialog({ open, onOpenChange, onExport, selectedCount }: Ex
                 </Label>
               </div>
               <div className="flex items-center space-x-2">
+                <RadioGroupItem value="word" id="word" data-testid="radio-word" />
+                <Label htmlFor="word" className="font-normal cursor-pointer">
+                  Word (.docx) - Formatted addresses
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
                 <RadioGroupItem value="mailing" id="mailing" data-testid="radio-mailing" />
                 <Label htmlFor="mailing" className="font-normal cursor-pointer">
                   Mailing List (CSV with address formatting)

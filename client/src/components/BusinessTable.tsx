@@ -89,7 +89,17 @@ export function BusinessTable({ data, onEdit, onDelete, selectedIds, onSelection
     },
     {
       accessorKey: "streetName",
-      header: "Street Name",
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="hover-elevate"
+          data-testid="sort-streetName"
+        >
+          Street Name
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
       cell: ({ row }) => (
         <div className="text-muted-foreground text-data">
           {row.getValue("streetName")}
@@ -98,21 +108,51 @@ export function BusinessTable({ data, onEdit, onDelete, selectedIds, onSelection
     },
     {
       accessorKey: "zipcode",
-      header: "Zipcode",
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="hover-elevate"
+          data-testid="sort-zipcode"
+        >
+          Zipcode
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
       cell: ({ row }) => (
         <div className="text-data">{row.getValue("zipcode")}</div>
       ),
     },
     {
       accessorKey: "city",
-      header: "City",
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="hover-elevate"
+          data-testid="sort-city"
+        >
+          City
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
       cell: ({ row }) => (
         <div className="text-data">{row.getValue("city")}</div>
       ),
     },
     {
       accessorKey: "email",
-      header: "Email",
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="hover-elevate"
+          data-testid="sort-email"
+        >
+          Email
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
       cell: ({ row }) => (
         <div className="text-muted-foreground text-data">
           {row.getValue("email")}
@@ -121,14 +161,34 @@ export function BusinessTable({ data, onEdit, onDelete, selectedIds, onSelection
     },
     {
       accessorKey: "phone",
-      header: "Phone",
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="hover-elevate"
+          data-testid="sort-phone"
+        >
+          Phone
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
       cell: ({ row }) => (
         <div className="text-data">{row.getValue("phone")}</div>
       ),
     },
     {
       accessorKey: "tags",
-      header: "Tags",
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="hover-elevate"
+          data-testid="sort-tags"
+        >
+          Tags
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
       cell: ({ row }) => {
         const tags = row.getValue("tags") as string[];
         return (
@@ -140,6 +200,11 @@ export function BusinessTable({ data, onEdit, onDelete, selectedIds, onSelection
             ))}
           </div>
         );
+      },
+      sortingFn: (rowA, rowB) => {
+        const tagsA = ((rowA.getValue("tags") as string[]) || []).join(", ");
+        const tagsB = ((rowB.getValue("tags") as string[]) || []).join(", ");
+        return tagsA.localeCompare(tagsB);
       },
     },
     {

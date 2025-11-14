@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { insertBusinessSchema } from "@shared/schema";
 import multer from "multer";
 import * as XLSX from "xlsx";
+import { Document, Packer, Paragraph, TextRun, AlignmentType, HeadingLevel } from "docx";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const upload = multer({ storage: multer.memoryStorage() });
@@ -203,7 +204,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "Businesses");
 
-      if (format === "csv" || format === "mailinglist") {
+      if (format === "word") {
+        // Create Word document with specific formatting
+        const sections = businessesToExport.map(business => {
+          return [
+            new Paragraph({
+              text: business.name,
+              heading: HeadingLevel.HEADING_2,
+              alignment: AlignmentType.CENTER,
+              spacing: { after: 200 },
+            }),
+            new Paragraph({
+              text: business.streetName,
+              alignment: AlignmentType.CENTER,
+              spacing: { after: 100 },
+            }),
+            new Paragraph({
+              text: `${business.zipcode} ${business.city}`,
+              alignment: AlignmentType.CENTER,
+              spacing: { after: 400 },
+            }),
+          ];
+        }).flat();
+
+        const doc = new Document({
+          sections: [{
+            properties: {},
+            children: sections,
+          }],
+        });
+
+        const buffer = await Packer.toBuffer(doc);
+        res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+        res.setHeader("Content-Disposition", 'attachment; filename="businesses.docx"');
+        res.send(buffer);
+      } else if (format === "csv" || format === "mailinglist") {
         const csv = XLSX.utils.sheet_to_csv(worksheet);
         res.setHeader("Content-Type", "text/csv");
         res.setHeader("Content-Disposition", 'attachment; filename="businesses.csv"');
