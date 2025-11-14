@@ -21,7 +21,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Edit, Trash2, ArrowUpDown, Pencil, Loader2 } from "lucide-react";
+import { Edit, Trash2, ArrowUpDown, Loader2 } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -280,7 +280,7 @@ export function BusinessTable({ data, onEdit, onDelete, selectedIds, onSelection
 
         return (
           <div
-            className="text-muted-foreground text-sm cursor-pointer hover-elevate rounded border border-border px-2 py-1 min-h-8 flex items-center group"
+            className="text-muted-foreground text-sm cursor-pointer hover-elevate rounded border border-border px-2 py-1 min-h-8 flex items-center"
             onDoubleClick={() => handleCommentEdit(business.id, business.comment || '')}
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
@@ -294,7 +294,6 @@ export function BusinessTable({ data, onEdit, onDelete, selectedIds, onSelection
             data-testid={`comment-${business.id}`}
           >
             <span className="flex-1">{business.comment}</span>
-            <Pencil className="h-3 w-3 opacity-0 group-hover:opacity-50 transition-opacity ml-2" />
           </div>
         );
       },

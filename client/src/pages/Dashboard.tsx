@@ -6,6 +6,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { SearchBar } from "@/components/SearchBar";
 import { TagFilter } from "@/components/TagFilter";
 import { ZipcodeFilter } from "@/components/ZipcodeFilter";
+import { ActiveFilter } from "@/components/ActiveFilter";
 import { BusinessTable } from "@/components/BusinessTable";
 import { ImportDialog } from "@/components/ImportDialog";
 import { ExportDialog } from "@/components/ExportDialog";
@@ -23,6 +24,7 @@ export default function Dashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [selectedZipcodes, setSelectedZipcodes] = useState<string[]>([]);
+  const [selectedStatus, setSelectedStatus] = useState<"active" | "inactive" | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [importOpen, setImportOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
@@ -145,9 +147,12 @@ export default function Dashboard() {
       const matchesZipcodes = selectedZipcodes.length === 0 || 
         selectedZipcodes.includes(business.zipcode);
       
-      return matchesSearch && matchesTags && matchesZipcodes;
+      const matchesStatus = !selectedStatus || 
+        (business.isActive === (selectedStatus === "active"));
+      
+      return matchesSearch && matchesTags && matchesZipcodes && matchesStatus;
     });
-  }, [businesses, searchQuery, selectedTags, selectedZipcodes]);
+  }, [businesses, searchQuery, selectedTags, selectedZipcodes, selectedStatus]);
 
   const handleImport = async (file: File, tags: string[]) => {
     const formData = new FormData();
@@ -364,6 +369,11 @@ export default function Dashboard() {
               selectedZipcodes={selectedZipcodes}
               onToggleZipcode={toggleZipcode}
               onClearAll={() => setSelectedZipcodes([])}
+            />
+            
+            <ActiveFilter
+              selectedStatus={selectedStatus}
+              onStatusChange={setSelectedStatus}
             />
           </div>
         </div>
