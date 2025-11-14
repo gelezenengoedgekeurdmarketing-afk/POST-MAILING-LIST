@@ -62,6 +62,23 @@ export function BusinessTable({ data, onEdit, onDelete, selectedIds, onSelection
     },
   });
 
+  const updateIsActiveMutation = useMutation({
+    mutationFn: async ({ id, isActive }: { id: string; isActive: boolean }) => {
+      const res = await apiRequest("PATCH", `/api/businesses/${id}`, { isActive });
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/businesses'] });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update status. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleCommentEdit = (businessId: string, currentComment: string) => {
     setEditingComments(new Map(editingComments.set(businessId, currentComment || '')));
   };
@@ -283,24 +300,41 @@ export function BusinessTable({ data, onEdit, onDelete, selectedIds, onSelection
     },
     {
       id: "actions",
+      header: "Actions",
       cell: ({ row }) => (
-        <div className="flex gap-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onEdit(row.original)}
-            data-testid={`button-edit-${row.original.id}`}
-          >
-            <Edit className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onDelete(row.original.id)}
-            data-testid={`button-delete-${row.original.id}`}
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
+            <Checkbox
+              checked={row.original.isActive}
+              onCheckedChange={(checked) => {
+                updateIsActiveMutation.mutate({
+                  id: row.original.id,
+                  isActive: !!checked,
+                });
+              }}
+              data-testid={`checkbox-active-${row.original.id}`}
+              aria-label={`Toggle active status for ${row.original.name}`}
+            />
+            <span className="text-xs text-muted-foreground">Active</span>
+          </div>
+          <div className="flex gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => onEdit(row.original)}
+              data-testid={`button-edit-${row.original.id}`}
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => onDelete(row.original.id)}
+              data-testid={`button-delete-${row.original.id}`}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       ),
     },
