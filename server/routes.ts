@@ -318,7 +318,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   children: [
                     new TextRun({
                       text: business.name.toUpperCase(),
-                      font: "Arial",
+                      font: "Aptos",
                       size: 22, // 11pt (size is in half-points)
                     }),
                   ],
@@ -333,7 +333,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   children: [
                     new TextRun({
                       text: business.streetName,
-                      font: "Arial",
+                      font: "Aptos",
                       size: 22, // 11pt
                     }),
                   ],
@@ -348,7 +348,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   children: [
                     new TextRun({
                       text: `${business.zipcode} ${business.city}`,
-                      font: "Arial",
+                      font: "Aptos",
                       size: 22, // 11pt
                     }),
                   ],
