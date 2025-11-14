@@ -312,139 +312,141 @@ export async function registerRoutes(app: Express): Promise<Server> {
         //   Width: 3 × 70mm = 210mm (no horizontal margin needed)
         //   Height: 9 × 32mm = 288mm, leaving 9mm for top/bottom margins
         
-        const rows: TableRow[] = [];
         const LABELS_PER_PAGE = 27;
         const ROWS_PER_PAGE = 9;
         const COLS_PER_ROW = 3;
         const LABEL_WIDTH_MM = 70;
         const LABEL_HEIGHT_MM = 32;
         
-        console.log(`Creating Word export: ${businessesToExport.length} businesses, generating ${ROWS_PER_PAGE} rows × ${COLS_PER_ROW} columns = ${LABELS_PER_PAGE} labels`);
+        // Calculate how many pages we need
+        const totalPages = Math.ceil(businessesToExport.length / LABELS_PER_PAGE);
+        console.log(`Creating Word export: ${businessesToExport.length} businesses across ${totalPages} page(s), ${ROWS_PER_PAGE} rows × ${COLS_PER_ROW} columns = ${LABELS_PER_PAGE} labels per page`);
         
-        // Create exactly 9 rows for Avery 3479 label sheet
-        for (let rowIndex = 0; rowIndex < ROWS_PER_PAGE; rowIndex++) {
-          const cells: TableCell[] = [];
-          
-          // Create 3 cells per row
-          for (let colIndex = 0; colIndex < COLS_PER_ROW; colIndex++) {
-            const businessIndex = rowIndex * COLS_PER_ROW + colIndex;
-            const business = businessesToExport[businessIndex];
-            
-            if (business) {
-              // Cell with business data
-              cells.push(
-                new TableCell({
+        // Helper function to create a label cell
+        const createLabelCell = (business: any) => {
+          if (business) {
+            return new TableCell({
+              children: [
+                new Paragraph({
                   children: [
-                    new Paragraph({
-                      children: [
-                        new TextRun({
-                          text: business.name.toUpperCase(),
-                          font: "Aptos",
-                          size: 22, // 11pt (size is in half-points)
-                          bold: true,
-                        }),
-                      ],
-                      alignment: AlignmentType.CENTER,
-                      spacing: { after: 40, before: 0, line: 240 },
-                    }),
-                    new Paragraph({
-                      children: [
-                        new TextRun({
-                          text: business.streetName.toUpperCase(),
-                          font: "Aptos",
-                          size: 22, // 11pt
-                        }),
-                      ],
-                      alignment: AlignmentType.CENTER,
-                      spacing: { after: 40, before: 0, line: 240 },
-                    }),
-                    new Paragraph({
-                      children: [
-                        new TextRun({
-                          text: `${business.zipcode} ${business.city.toUpperCase()}`,
-                          font: "Aptos",
-                          size: 22, // 11pt
-                        }),
-                      ],
-                      alignment: AlignmentType.CENTER,
-                      spacing: { after: 0, before: 0, line: 240 },
+                    new TextRun({
+                      text: business.name.toUpperCase(),
+                      font: "Aptos",
+                      size: 22, // 11pt (size is in half-points)
+                      bold: true,
                     }),
                   ],
-                  width: {
-                    size: convertMillimetersToTwip(LABEL_WIDTH_MM),
-                    type: WidthType.DXA,
-                  },
-                  margins: {
-                    top: convertMillimetersToTwip(0.5),
-                    bottom: convertMillimetersToTwip(0.5),
-                    left: convertMillimetersToTwip(1),
-                    right: convertMillimetersToTwip(1),
-                  },
-                  verticalAlign: VerticalAlign.CENTER,
-                })
-              );
-            } else {
-              // Empty cell
-              cells.push(
-                new TableCell({
-                  children: [new Paragraph({ text: "" })],
-                  width: {
-                    size: convertMillimetersToTwip(LABEL_WIDTH_MM),
-                    type: WidthType.DXA,
-                  },
-                  margins: {
-                    top: convertMillimetersToTwip(0.5),
-                    bottom: convertMillimetersToTwip(0.5),
-                    left: convertMillimetersToTwip(1),
-                    right: convertMillimetersToTwip(1),
-                  },
-                })
-              );
+                  alignment: AlignmentType.CENTER,
+                  spacing: { after: 40, before: 0, line: 240 },
+                }),
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: business.streetName.toUpperCase(),
+                      font: "Aptos",
+                      size: 22, // 11pt
+                    }),
+                  ],
+                  alignment: AlignmentType.CENTER,
+                  spacing: { after: 40, before: 0, line: 240 },
+                }),
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: `${business.zipcode} ${business.city.toUpperCase()}`,
+                      font: "Aptos",
+                      size: 22, // 11pt
+                    }),
+                  ],
+                  alignment: AlignmentType.CENTER,
+                  spacing: { after: 0, before: 0, line: 240 },
+                }),
+              ],
+              width: {
+                size: convertMillimetersToTwip(LABEL_WIDTH_MM),
+                type: WidthType.DXA,
+              },
+              margins: {
+                top: convertMillimetersToTwip(0.5),
+                bottom: convertMillimetersToTwip(0.5),
+                left: convertMillimetersToTwip(1),
+                right: convertMillimetersToTwip(1),
+              },
+              verticalAlign: VerticalAlign.CENTER,
+            });
+          } else {
+            // Empty cell
+            return new TableCell({
+              children: [new Paragraph({ text: "" })],
+              width: {
+                size: convertMillimetersToTwip(LABEL_WIDTH_MM),
+                type: WidthType.DXA,
+              },
+              margins: {
+                top: convertMillimetersToTwip(0.5),
+                bottom: convertMillimetersToTwip(0.5),
+                left: convertMillimetersToTwip(1),
+                right: convertMillimetersToTwip(1),
+              },
+            });
+          }
+        };
+        
+        // Create sections (one per page)
+        const sections = [];
+        
+        for (let pageIndex = 0; pageIndex < totalPages; pageIndex++) {
+          const rows: TableRow[] = [];
+          const startBusinessIndex = pageIndex * LABELS_PER_PAGE;
+          
+          // Create exactly 9 rows for Avery 3479 label sheet
+          for (let rowIndex = 0; rowIndex < ROWS_PER_PAGE; rowIndex++) {
+            const cells: TableCell[] = [];
+            
+            // Create 3 cells per row
+            for (let colIndex = 0; colIndex < COLS_PER_ROW; colIndex++) {
+              const businessIndex = startBusinessIndex + (rowIndex * COLS_PER_ROW + colIndex);
+              const business = businessesToExport[businessIndex];
+              
+              cells.push(createLabelCell(business));
             }
+            
+            rows.push(
+              new TableRow({
+                children: cells,
+                height: {
+                  value: convertMillimetersToTwip(LABEL_HEIGHT_MM),
+                  rule: HeightRule.EXACT,
+                },
+              })
+            );
           }
           
-          rows.push(
-            new TableRow({
-              children: cells,
-              height: {
-                value: convertMillimetersToTwip(LABEL_HEIGHT_MM),
-                rule: HeightRule.EXACT,
-              },
-            })
-          );
-        }
-        
-        console.log(`Created ${rows.length} rows in Word document. Each row has ${COLS_PER_ROW} cells. Total cells: ${rows.length * COLS_PER_ROW}`);
-        
-        // Calculate margins to center the label grid on the page
-        // Available width: 210mm, needed: 3 × 70mm = 210mm → minimal horizontal margins
-        // Available height: 297mm, needed: 9 × 32mm = 288mm → 9mm remaining for vertical margins
-        const totalTableWidth = COLS_PER_ROW * LABEL_WIDTH_MM;
-        const totalTableHeight = ROWS_PER_PAGE * LABEL_HEIGHT_MM;
-        const horizontalMargin = (210 - totalTableWidth) / 2; // 0mm each side
-        const verticalMarginTotal = 297 - totalTableHeight; // 9mm total
-        // Use very small margins to ensure all 9 rows fit on one page
-        const topMargin = 2; // 2mm
-        const bottomMargin = 2; // 2mm
-        
-        const table = new Table({
-          rows,
-          width: {
-            size: convertMillimetersToTwip(totalTableWidth),
-            type: WidthType.DXA,
-          },
-          borders: {
-            top: { style: BorderStyle.NONE, size: 0 },
-            bottom: { style: BorderStyle.NONE, size: 0 },
-            left: { style: BorderStyle.NONE, size: 0 },
-            right: { style: BorderStyle.NONE, size: 0 },
-            insideHorizontal: { style: BorderStyle.NONE, size: 0 },
-            insideVertical: { style: BorderStyle.NONE, size: 0 },
-          },
-        });
+          console.log(`Page ${pageIndex + 1}: Created ${rows.length} rows with ${COLS_PER_ROW} cells each. Total cells: ${rows.length * COLS_PER_ROW}`);
+          
+          // Calculate margins to center the label grid on the page
+          const totalTableWidth = COLS_PER_ROW * LABEL_WIDTH_MM;
+          const horizontalMargin = (210 - totalTableWidth) / 2; // 0mm each side
+          const topMargin = 2; // 2mm
+          const bottomMargin = 2; // 2mm
+          
+          const table = new Table({
+            rows,
+            width: {
+              size: convertMillimetersToTwip(totalTableWidth),
+              type: WidthType.DXA,
+            },
+            borders: {
+              top: { style: BorderStyle.NONE, size: 0 },
+              bottom: { style: BorderStyle.NONE, size: 0 },
+              left: { style: BorderStyle.NONE, size: 0 },
+              right: { style: BorderStyle.NONE, size: 0 },
+              insideHorizontal: { style: BorderStyle.NONE, size: 0 },
+              insideVertical: { style: BorderStyle.NONE, size: 0 },
+            },
+          });
 
-        const doc = new Document({
-          sections: [{
+          sections.push({
             properties: {
               page: {
                 size: {
@@ -461,7 +463,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
               },
             },
             children: [table],
-          }],
+          });
+        }
+
+        const doc = new Document({
+          sections,
         });
 
         const buffer = await Packer.toBuffer(doc);
