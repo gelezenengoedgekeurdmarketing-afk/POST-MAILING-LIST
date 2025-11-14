@@ -47,7 +47,6 @@ export class MemStorage implements IStorage {
     const existing = this.businesses.get(id);
     if (!existing) return undefined;
     
-    // Only update fields that are explicitly provided (not undefined)
     const updated: Business = {
       ...existing,
       ...(updates.name !== undefined && { name: updates.name }),
