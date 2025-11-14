@@ -108,7 +108,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           // Honor per-row tags if present, otherwise use dialog tags
           let rowTags = tags;
-          const rowTagsField = row.tags || row.Tags || row.TAGS;
+          const rowTagsField = row.tags || row.Tags || row.TAGS || row['(google) categorie'];
           if (rowTagsField) {
             rowTags = Array.isArray(rowTagsField) 
               ? rowTagsField 
@@ -116,15 +116,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
           
           const business = {
-            name: toString(row.name || row.Name || row.NAME),
-            streetName: toString(row.streetName || row.street_name || row.StreetName || row.address || row.Address || row.ADDRESS),
-            zipcode: toString(row.zipcode || row.zip || row.Zipcode || row.ZIP || row.postalCode || row.postal_code || row.PostalCode),
-            city: toString(row.city || row.City || row.CITY),
-            country: toString(row.country || row.Country || row.COUNTRY),
-            email: toString(row.email || row.Email || row.EMAIL),
-            phone: toString(row.phone || row.Phone || row.PHONE),
+            name: toString(row.name || row.Name || row.NAME || row['naam (zaak)'] || row['naam']),
+            streetName: toString(row.streetName || row.street_name || row.StreetName || row.address || row.Address || row.ADDRESS || row.adresregel),
+            zipcode: toString(row.zipcode || row.zip || row.Zipcode || row.ZIP || row.postalCode || row.postal_code || row.PostalCode || row.PC),
+            city: toString(row.city || row.City || row.CITY || row.PLAATS || row.plaats),
+            country: toString(row.country || row.Country || row.COUNTRY || row.land) || "Netherlands",
+            email: toString(row.email || row.Email || row.EMAIL || row['e-mail']) || `contact@business-${Date.now()}.example`,
+            phone: toString(row.phone || row.Phone || row.PHONE || row.telefoon || row.tel),
             tags: rowTags,
-            comment: toString(row.comment || row.Comment || row.COMMENT),
+            comment: toString(row.comment || row.Comment || row.COMMENT || row.opmerking),
             isActive: row.isActive !== undefined ? row.isActive : (row.is_active !== undefined ? row.is_active : true),
           };
 
