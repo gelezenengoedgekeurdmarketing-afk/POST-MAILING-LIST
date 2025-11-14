@@ -381,32 +381,46 @@ export default function Dashboard() {
             onChange={setSearchQuery}
           />
           
-          <div className="flex gap-4 flex-wrap">
+          <div className="flex gap-4 flex-wrap items-center">
             <TagFilter
               availableTags={allTags}
               selectedTags={selectedTags}
               onToggleTag={toggleTag}
-              onClearAll={() => setSelectedTags([])}
             />
             
             <CityFilter
               availableCities={allCities}
               selectedCities={selectedCities}
               onToggleCity={toggleCity}
-              onClearAll={() => setSelectedCities([])}
             />
             
             <ZipcodeFilter
               availableZipcodes={allZipcodes}
               selectedZipcodes={selectedZipcodes}
               onToggleZipcode={toggleZipcode}
-              onClearAll={() => setSelectedZipcodes([])}
             />
             
             <ActiveFilter
               selectedStatus={selectedStatus}
               onStatusChange={setSelectedStatus}
             />
+            
+            {(selectedTags.length > 0 || selectedCities.length > 0 || selectedZipcodes.length > 0 || selectedStatus !== null) && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setSelectedTags([]);
+                  setSelectedCities([]);
+                  setSelectedZipcodes([]);
+                  setSelectedStatus(null);
+                }}
+                className="hover-elevate"
+                data-testid="button-clear-all-filters"
+              >
+                Clear All Filters
+              </Button>
+            )}
           </div>
         </div>
 

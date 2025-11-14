@@ -17,10 +17,9 @@ interface ZipcodeFilterProps {
   availableZipcodes: string[];
   selectedZipcodes: string[];
   onToggleZipcode: (zipcode: string) => void;
-  onClearAll: () => void;
 }
 
-export function ZipcodeFilter({ availableZipcodes, selectedZipcodes, onToggleZipcode, onClearAll }: ZipcodeFilterProps) {
+export function ZipcodeFilter({ availableZipcodes, selectedZipcodes, onToggleZipcode }: ZipcodeFilterProps) {
   const [open, setOpen] = useState(false);
 
   if (availableZipcodes.length === 0) return null;
@@ -79,34 +78,23 @@ export function ZipcodeFilter({ availableZipcodes, selectedZipcodes, onToggleZip
         </Popover>
 
         {selectedZipcodes.length > 0 && (
-          <>
-            <div className="flex flex-wrap gap-2">
-              {selectedZipcodes.map((zipcode) => (
-                <Badge
-                  key={zipcode}
-                  variant="secondary"
-                  className="gap-1"
-                  data-testid={`badge-selected-zipcode-${zipcode}`}
-                >
-                  {zipcode}
-                  <X
-                    className="h-3 w-3 cursor-pointer hover-elevate"
-                    onClick={() => onToggleZipcode(zipcode)}
-                    data-testid={`button-remove-selected-zipcode-${zipcode}`}
-                  />
-                </Badge>
-              ))}
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onClearAll}
-              className="h-auto py-1 px-2 text-xs hover-elevate"
-              data-testid="button-clear-zipcodes"
-            >
-              Clear all
-            </Button>
-          </>
+          <div className="flex flex-wrap gap-2">
+            {selectedZipcodes.map((zipcode) => (
+              <Badge
+                key={zipcode}
+                variant="secondary"
+                className="gap-1"
+                data-testid={`badge-selected-zipcode-${zipcode}`}
+              >
+                {zipcode}
+                <X
+                  className="h-3 w-3 cursor-pointer hover-elevate"
+                  onClick={() => onToggleZipcode(zipcode)}
+                  data-testid={`button-remove-selected-zipcode-${zipcode}`}
+                />
+              </Badge>
+            ))}
+          </div>
         )}
       </div>
     </div>

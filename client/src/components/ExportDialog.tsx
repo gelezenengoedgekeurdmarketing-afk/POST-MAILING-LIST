@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Download } from "lucide-react";
 import {
   Dialog,
@@ -21,7 +21,13 @@ interface ExportDialogProps {
 
 export function ExportDialog({ open, onOpenChange, onExport, selectedCount }: ExportDialogProps) {
   const [format, setFormat] = useState("xlsx");
-  const [exportType, setExportType] = useState("all");
+  const [exportType, setExportType] = useState(selectedCount > 0 ? "selected" : "all");
+
+  useEffect(() => {
+    if (open) {
+      setExportType(selectedCount > 0 ? "selected" : "all");
+    }
+  }, [open, selectedCount]);
 
   const handleExport = () => {
     onExport(format, exportType);
@@ -57,13 +63,7 @@ export function ExportDialog({ open, onOpenChange, onExport, selectedCount }: Ex
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="word" id="word" data-testid="radio-word" />
                 <Label htmlFor="word" className="font-normal cursor-pointer">
-                  Word (.docx) - Formatted addresses
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="mailing" id="mailing" data-testid="radio-mailing" />
-                <Label htmlFor="mailing" className="font-normal cursor-pointer">
-                  Mailing List (CSV with address formatting)
+                  Word (.docx)
                 </Label>
               </div>
             </RadioGroup>

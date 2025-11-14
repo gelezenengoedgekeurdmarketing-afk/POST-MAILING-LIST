@@ -17,10 +17,9 @@ interface TagFilterProps {
   availableTags: string[];
   selectedTags: string[];
   onToggleTag: (tag: string) => void;
-  onClearAll: () => void;
 }
 
-export function TagFilter({ availableTags, selectedTags, onToggleTag, onClearAll }: TagFilterProps) {
+export function TagFilter({ availableTags, selectedTags, onToggleTag }: TagFilterProps) {
   const [open, setOpen] = useState(false);
 
   if (availableTags.length === 0) return null;
@@ -79,34 +78,23 @@ export function TagFilter({ availableTags, selectedTags, onToggleTag, onClearAll
         </Popover>
 
         {selectedTags.length > 0 && (
-          <>
-            <div className="flex flex-wrap gap-2">
-              {selectedTags.map((tag) => (
-                <Badge
-                  key={tag}
-                  variant="secondary"
-                  className="gap-1"
-                  data-testid={`badge-selected-${tag}`}
-                >
-                  {tag}
-                  <X
-                    className="h-3 w-3 cursor-pointer hover-elevate"
-                    onClick={() => onToggleTag(tag)}
-                    data-testid={`button-remove-selected-${tag}`}
-                  />
-                </Badge>
-              ))}
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onClearAll}
-              className="h-auto py-1 px-2 text-xs hover-elevate"
-              data-testid="button-clear-tags"
-            >
-              Clear all
-            </Button>
-          </>
+          <div className="flex flex-wrap gap-2">
+            {selectedTags.map((tag) => (
+              <Badge
+                key={tag}
+                variant="secondary"
+                className="gap-1"
+                data-testid={`badge-selected-${tag}`}
+              >
+                {tag}
+                <X
+                  className="h-3 w-3 cursor-pointer hover-elevate"
+                  onClick={() => onToggleTag(tag)}
+                  data-testid={`button-remove-selected-${tag}`}
+                />
+              </Badge>
+            ))}
+          </div>
         )}
       </div>
     </div>

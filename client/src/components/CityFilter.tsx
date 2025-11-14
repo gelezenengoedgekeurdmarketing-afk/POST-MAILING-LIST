@@ -17,10 +17,9 @@ interface CityFilterProps {
   availableCities: string[];
   selectedCities: string[];
   onToggleCity: (city: string) => void;
-  onClearAll: () => void;
 }
 
-export function CityFilter({ availableCities, selectedCities, onToggleCity, onClearAll }: CityFilterProps) {
+export function CityFilter({ availableCities, selectedCities, onToggleCity }: CityFilterProps) {
   const [open, setOpen] = useState(false);
 
   if (availableCities.length === 0) return null;
@@ -79,34 +78,23 @@ export function CityFilter({ availableCities, selectedCities, onToggleCity, onCl
         </Popover>
 
         {selectedCities.length > 0 && (
-          <>
-            <div className="flex flex-wrap gap-2">
-              {selectedCities.map((city) => (
-                <Badge
-                  key={city}
-                  variant="secondary"
-                  className="gap-1"
-                  data-testid={`badge-selected-city-${city}`}
-                >
-                  {city}
-                  <X
-                    className="h-3 w-3 cursor-pointer hover-elevate"
-                    onClick={() => onToggleCity(city)}
-                    data-testid={`button-remove-selected-city-${city}`}
-                  />
-                </Badge>
-              ))}
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onClearAll}
-              className="h-auto py-1 px-2 text-xs hover-elevate"
-              data-testid="button-clear-cities"
-            >
-              Clear all
-            </Button>
-          </>
+          <div className="flex flex-wrap gap-2">
+            {selectedCities.map((city) => (
+              <Badge
+                key={city}
+                variant="secondary"
+                className="gap-1"
+                data-testid={`badge-selected-city-${city}`}
+              >
+                {city}
+                <X
+                  className="h-3 w-3 cursor-pointer hover-elevate"
+                  onClick={() => onToggleCity(city)}
+                  data-testid={`button-remove-selected-city-${city}`}
+                />
+              </Badge>
+            ))}
+          </div>
         )}
       </div>
     </div>
