@@ -7,6 +7,7 @@ import { HeaderUserMenu } from "@/components/HeaderUserMenu";
 import { SearchBar } from "@/components/SearchBar";
 import { TagFilter } from "@/components/TagFilter";
 import { CityFilter } from "@/components/CityFilter";
+import { ZipcodeFilter } from "@/components/ZipcodeFilter";
 import { ActiveFilter } from "@/components/ActiveFilter";
 import { BusinessTable } from "@/components/BusinessTable";
 import { ImportDialog } from "@/components/ImportDialog";
@@ -25,6 +26,7 @@ export default function Dashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [selectedCities, setSelectedCities] = useState<string[]>([]);
+  const [selectedZipcodes, setSelectedZipcodes] = useState<string[]>([]);
   const [selectedStatus, setSelectedStatus] = useState<"active" | "inactive" | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [importOpen, setImportOpen] = useState(false);
@@ -135,6 +137,16 @@ export default function Dashboard() {
     return Array.from(citySet).sort();
   }, [businesses]);
 
+  const allZipcodes = useMemo(() => {
+    const zipcodeSet = new Set<string>();
+    businesses.forEach(business => {
+      if (business.zipcode) {
+        zipcodeSet.add(business.zipcode);
+      }
+    });
+    return Array.from(zipcodeSet).sort();
+  }, [businesses]);
+
   const filteredBusinesses = useMemo(() => {
     return businesses.filter(business => {
       const matchesSearch = searchQuery === "" || 
@@ -148,12 +160,15 @@ export default function Dashboard() {
       const matchesCities = selectedCities.length === 0 || 
         selectedCities.includes(business.city);
       
+      const matchesZipcodes = selectedZipcodes.length === 0 || 
+        selectedZipcodes.includes(business.zipcode);
+      
       const matchesStatus = !selectedStatus || 
         (business.isActive === (selectedStatus === "active"));
       
-      return matchesSearch && matchesTags && matchesCities && matchesStatus;
+      return matchesSearch && matchesTags && matchesCities && matchesZipcodes && matchesStatus;
     });
-  }, [businesses, searchQuery, selectedTags, selectedCities, selectedStatus]);
+  }, [businesses, searchQuery, selectedTags, selectedCities, selectedZipcodes, selectedStatus]);
 
   const handleImport = async (file: File, tags: string[]) => {
     const formData = new FormData();
@@ -307,6 +322,14 @@ export default function Dashboard() {
     }
   };
 
+  const toggleZipcode = (zipcode: string) => {
+    if (selectedZipcodes.includes(zipcode)) {
+      setSelectedZipcodes(selectedZipcodes.filter(z => z !== zipcode));
+    } else {
+      setSelectedZipcodes([...selectedZipcodes, zipcode]);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -371,6 +394,13 @@ export default function Dashboard() {
               selectedCities={selectedCities}
               onToggleCity={toggleCity}
               onClearAll={() => setSelectedCities([])}
+            />
+            
+            <ZipcodeFilter
+              availableZipcodes={allZipcodes}
+              selectedZipcodes={selectedZipcodes}
+              onToggleZipcode={toggleZipcode}
+              onClearAll={() => setSelectedZipcodes([])}
             />
             
             <ActiveFilter
