@@ -239,7 +239,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Export businesses to Excel/CSV
   app.post("/api/export", authMiddleware, async (req, res) => {
     try {
-      const { format, ids } = req.body;
+      const { format, ids, customName } = req.body;
       
       let businessesToExport;
       if (ids && Array.isArray(ids) && ids.length > 0) {
@@ -316,18 +316,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
 
         const buffer = await Packer.toBuffer(doc);
+        const fileName = customName 
+          ? `Post Mailing List - ${customName}.docx`
+          : "Post Mailing List - export.docx";
         res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
-        res.setHeader("Content-Disposition", 'attachment; filename="businesses.docx"');
+        res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
         res.send(buffer);
       } else if (format === "csv" || format === "mailinglist") {
         const csv = XLSX.utils.sheet_to_csv(worksheet);
+        const fileName = customName 
+          ? `Post Mailing List - ${customName}.csv`
+          : "Post Mailing List - export.csv";
         res.setHeader("Content-Type", "text/csv");
-        res.setHeader("Content-Disposition", 'attachment; filename="businesses.csv"');
+        res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
         res.send(csv);
       } else {
         const buffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" });
+        const fileName = customName 
+          ? `Post Mailing List - ${customName}.xlsx`
+          : "Post Mailing List - export.xlsx";
         res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-        res.setHeader("Content-Disposition", 'attachment; filename="businesses.xlsx"');
+        res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
         res.send(buffer);
       }
     } catch (error: any) {

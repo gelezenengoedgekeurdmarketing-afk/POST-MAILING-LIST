@@ -212,7 +212,7 @@ export default function Dashboard() {
     }
   };
 
-  const handleExport = async (format: string, type: string) => {
+  const handleExport = async (format: string, type: string, customName: string) => {
     const ids = type === "selected" ? selectedIds : undefined;
     
     try {
@@ -221,7 +221,7 @@ export default function Dashboard() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ format, ids }),
+        body: JSON.stringify({ format, ids, customName }),
       });
 
       if (!response.ok) {
@@ -233,7 +233,18 @@ export default function Dashboard() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = format === "csv" || format === "mailinglist" ? "businesses.csv" : "businesses.xlsx";
+      
+      // Extract filename from Content-Disposition header
+      const contentDisposition = response.headers.get("Content-Disposition");
+      let filename = "export.xlsx";
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+        if (filenameMatch) {
+          filename = filenameMatch[1];
+        }
+      }
+      
+      a.download = filename;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);

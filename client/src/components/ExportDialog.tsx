@@ -11,26 +11,29 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Input } from "@/components/ui/input";
 
 interface ExportDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onExport: (format: string, type: string) => void;
+  onExport: (format: string, type: string, customName: string) => void;
   selectedCount: number;
 }
 
 export function ExportDialog({ open, onOpenChange, onExport, selectedCount }: ExportDialogProps) {
   const [format, setFormat] = useState("xlsx");
   const [exportType, setExportType] = useState(selectedCount > 0 ? "selected" : "all");
+  const [customName, setCustomName] = useState("");
 
   useEffect(() => {
     if (open) {
       setExportType(selectedCount > 0 ? "selected" : "all");
+      setCustomName("");
     }
   }, [open, selectedCount]);
 
   const handleExport = () => {
-    onExport(format, exportType);
+    onExport(format, exportType, customName);
     onOpenChange(false);
   };
 
@@ -45,6 +48,20 @@ export function ExportDialog({ open, onOpenChange, onExport, selectedCount }: Ex
         </DialogHeader>
         
         <div className="space-y-6 py-4">
+          <div className="space-y-3">
+            <Label htmlFor="custom-name">List Name</Label>
+            <Input
+              id="custom-name"
+              placeholder="Enter custom name (optional)"
+              value={customName}
+              onChange={(e) => setCustomName(e.target.value)}
+              data-testid="input-custom-name"
+            />
+            <p className="text-xs text-muted-foreground">
+              Filename will be: Post Mailing List - {customName || "export"}.{format === "word" ? "docx" : format}
+            </p>
+          </div>
+
           <div className="space-y-3">
             <Label>Export Format</Label>
             <RadioGroup value={format} onValueChange={setFormat}>
