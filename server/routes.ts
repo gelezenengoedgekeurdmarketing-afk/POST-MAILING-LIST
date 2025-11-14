@@ -315,7 +315,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
             new TableCell({
               children: [
                 new Paragraph({
-                  text: business.name.toUpperCase(),
+                  children: [
+                    new TextRun({
+                      text: business.name.toUpperCase(),
+                      font: "Arial",
+                      size: 22, // 11pt (size is in half-points)
+                    }),
+                  ],
                   alignment: AlignmentType.LEFT,
                   spacing: { after: 100, before: 200 },
                 }),
@@ -324,7 +330,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   spacing: { after: 0 },
                 }),
                 new Paragraph({
-                  text: business.streetName,
+                  children: [
+                    new TextRun({
+                      text: business.streetName,
+                      font: "Arial",
+                      size: 22, // 11pt
+                    }),
+                  ],
                   alignment: AlignmentType.LEFT,
                   spacing: { after: 100 },
                 }),
@@ -333,7 +345,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   spacing: { after: 0 },
                 }),
                 new Paragraph({
-                  text: `${business.zipcode} ${business.city}`,
+                  children: [
+                    new TextRun({
+                      text: `${business.zipcode} ${business.city}`,
+                      font: "Arial",
+                      size: 22, // 11pt
+                    }),
+                  ],
                   alignment: AlignmentType.LEFT,
                   spacing: { after: 200 },
                 }),
