@@ -120,7 +120,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
           
           const business = {
-            name: toString(row.name || row.Name || row.NAME || row['naam (zaak)'] || row.naam || row.Naam || row.zaak),
+            name: toString(row.name || row.Name || row.NAME || row['naam (zaak)'] || row['Naam zaak'] || row.naam || row.Naam || row.zaak),
             streetName: toString(row.streetName || row.street_name || row.StreetName || row.address || row.Address || row.ADDRESS || row.adresregel || row.Adresregel || row['Adresregel 1'] || row['adresregel 1']),
             zipcode: toString(row.zipcode || row.zip || row.Zipcode || row.ZIP || row.postalCode || row.postal_code || row.PostalCode || row.PC || row.pc),
             city: toString(row.city || row.City || row.CITY || row.PLAATS || row.plaats || row.Plaats),
