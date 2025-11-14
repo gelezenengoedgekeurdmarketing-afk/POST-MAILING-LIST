@@ -320,9 +320,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
                       text: business.name.toUpperCase(),
                       font: "Aptos",
                       size: 22, // 11pt (size is in half-points)
+                      bold: true,
                     }),
                   ],
-                  alignment: AlignmentType.LEFT,
+                  alignment: AlignmentType.CENTER,
                   spacing: { after: 100, before: 200 },
                 }),
                 new Paragraph({
@@ -332,12 +333,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 new Paragraph({
                   children: [
                     new TextRun({
-                      text: business.streetName,
+                      text: business.streetName.toUpperCase(),
                       font: "Aptos",
                       size: 22, // 11pt
                     }),
                   ],
-                  alignment: AlignmentType.LEFT,
+                  alignment: AlignmentType.CENTER,
                   spacing: { after: 100 },
                 }),
                 new Paragraph({
@@ -347,12 +348,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 new Paragraph({
                   children: [
                     new TextRun({
-                      text: `${business.zipcode} ${business.city}`,
+                      text: `${business.zipcode} ${business.city.toUpperCase()}`,
                       font: "Aptos",
                       size: 22, // 11pt
                     }),
                   ],
-                  alignment: AlignmentType.LEFT,
+                  alignment: AlignmentType.CENTER,
                   spacing: { after: 200 },
                 }),
                 new Paragraph({
