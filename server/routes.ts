@@ -4,7 +4,7 @@ import { storagePromise } from "./storage";
 import { insertBusinessSchema } from "@shared/schema";
 import multer from "multer";
 import * as XLSX from "xlsx";
-import { Document, Packer, Paragraph, TextRun, AlignmentType, HeadingLevel, Table, TableRow, TableCell, WidthType, BorderStyle } from "docx";
+import { Document, Packer, Paragraph, TextRun, AlignmentType, HeadingLevel, Table, TableRow, TableCell, WidthType, BorderStyle, PageOrientation, HeightRule, VerticalAlign, convertMillimetersToTwip } from "docx";
 // TODO: Uncomment when database is enabled
 // import { setupAuth, isAuthenticated } from "./replitAuth";
 
@@ -303,102 +303,129 @@ export async function registerRoutes(app: Express): Promise<Server> {
       XLSX.utils.book_append_sheet(workbook, worksheet, "Businesses");
 
       if (format === "word") {
-        // Create Word document with 3-column table for mailing labels
-        const rows: TableRow[] = [];
+        // Avery Zweckform 3479 specifications:
+        // - A4 page: 210mm × 297mm
+        // - 27 labels per sheet: 3 columns × 9 rows
+        // - Each label: 70mm × 32mm
+        // - Calculated margins to fit labels exactly:
+        //   Width: 3 × 70mm = 210mm (no horizontal margin needed)
+        //   Height: 9 × 32mm = 288mm, leaving 9mm for top/bottom margins
         
-        // Process businesses in groups of 3 for each row
-        for (let i = 0; i < businessesToExport.length; i += 3) {
-          const rowBusinesses = businessesToExport.slice(i, i + 3);
+        const rows: TableRow[] = [];
+        const LABELS_PER_PAGE = 27;
+        const ROWS_PER_PAGE = 9;
+        const COLS_PER_ROW = 3;
+        const LABEL_WIDTH_MM = 70;
+        const LABEL_HEIGHT_MM = 32;
+        
+        // Create exactly 9 rows for Avery 3479 label sheet
+        for (let rowIndex = 0; rowIndex < ROWS_PER_PAGE; rowIndex++) {
+          const cells: TableCell[] = [];
           
-          // Create cells for this row
-          const cells = rowBusinesses.map(business => 
-            new TableCell({
-              children: [
-                new Paragraph({
+          // Create 3 cells per row
+          for (let colIndex = 0; colIndex < COLS_PER_ROW; colIndex++) {
+            const businessIndex = rowIndex * COLS_PER_ROW + colIndex;
+            const business = businessesToExport[businessIndex];
+            
+            if (business) {
+              // Cell with business data
+              cells.push(
+                new TableCell({
                   children: [
-                    new TextRun({
-                      text: business.name.toUpperCase(),
-                      font: "Aptos",
-                      size: 22, // 11pt (size is in half-points)
-                      bold: true,
+                    new Paragraph({
+                      children: [
+                        new TextRun({
+                          text: business.name.toUpperCase(),
+                          font: "Aptos",
+                          size: 22, // 11pt (size is in half-points)
+                          bold: true,
+                        }),
+                      ],
+                      alignment: AlignmentType.CENTER,
+                      spacing: { after: 80, before: 0 },
+                    }),
+                    new Paragraph({
+                      children: [
+                        new TextRun({
+                          text: business.streetName.toUpperCase(),
+                          font: "Aptos",
+                          size: 22, // 11pt
+                        }),
+                      ],
+                      alignment: AlignmentType.CENTER,
+                      spacing: { after: 80, before: 0 },
+                    }),
+                    new Paragraph({
+                      children: [
+                        new TextRun({
+                          text: `${business.zipcode} ${business.city.toUpperCase()}`,
+                          font: "Aptos",
+                          size: 22, // 11pt
+                        }),
+                      ],
+                      alignment: AlignmentType.CENTER,
+                      spacing: { after: 0, before: 0 },
                     }),
                   ],
-                  alignment: AlignmentType.CENTER,
-                  spacing: { after: 100, before: 200 },
-                }),
-                new Paragraph({
-                  text: "",
-                  spacing: { after: 0 },
-                }),
-                new Paragraph({
-                  children: [
-                    new TextRun({
-                      text: business.streetName.toUpperCase(),
-                      font: "Aptos",
-                      size: 22, // 11pt
-                    }),
-                  ],
-                  alignment: AlignmentType.CENTER,
-                  spacing: { after: 100 },
-                }),
-                new Paragraph({
-                  text: "",
-                  spacing: { after: 0 },
-                }),
-                new Paragraph({
-                  children: [
-                    new TextRun({
-                      text: `${business.zipcode} ${business.city.toUpperCase()}`,
-                      font: "Aptos",
-                      size: 22, // 11pt
-                    }),
-                  ],
-                  alignment: AlignmentType.CENTER,
-                  spacing: { after: 200 },
-                }),
-                new Paragraph({
-                  text: "",
-                  spacing: { after: 0 },
-                }),
-                new Paragraph({
-                  text: "",
-                  spacing: { after: 400 },
-                }),
-              ],
-              width: {
-                size: 33,
-                type: WidthType.PERCENTAGE,
-              },
-              margins: {
-                top: 100,
-                bottom: 100,
-                left: 200,
-                right: 200,
+                  width: {
+                    size: convertMillimetersToTwip(LABEL_WIDTH_MM),
+                    type: WidthType.DXA,
+                  },
+                  margins: {
+                    top: convertMillimetersToTwip(1),
+                    bottom: convertMillimetersToTwip(1),
+                    left: convertMillimetersToTwip(1),
+                    right: convertMillimetersToTwip(1),
+                  },
+                  verticalAlign: VerticalAlign.CENTER,
+                })
+              );
+            } else {
+              // Empty cell
+              cells.push(
+                new TableCell({
+                  children: [new Paragraph({ text: "" })],
+                  width: {
+                    size: convertMillimetersToTwip(LABEL_WIDTH_MM),
+                    type: WidthType.DXA,
+                  },
+                  margins: {
+                    top: convertMillimetersToTwip(1),
+                    bottom: convertMillimetersToTwip(1),
+                    left: convertMillimetersToTwip(1),
+                    right: convertMillimetersToTwip(1),
+                  },
+                })
+              );
+            }
+          }
+          
+          rows.push(
+            new TableRow({
+              children: cells,
+              height: {
+                value: convertMillimetersToTwip(LABEL_HEIGHT_MM),
+                rule: HeightRule.EXACT,
               },
             })
           );
-          
-          // Fill empty cells if less than 3 businesses in this row
-          while (cells.length < 3) {
-            cells.push(
-              new TableCell({
-                children: [new Paragraph({ text: "" })],
-                width: {
-                  size: 33,
-                  type: WidthType.PERCENTAGE,
-                },
-              })
-            );
-          }
-          
-          rows.push(new TableRow({ children: cells }));
         }
+        
+        // Calculate margins to center the label grid on the page
+        // Available width: 210mm, needed: 3 × 70mm = 210mm → minimal horizontal margins
+        // Available height: 297mm, needed: 9 × 32mm = 288mm → 9mm remaining for vertical margins
+        const totalTableWidth = COLS_PER_ROW * LABEL_WIDTH_MM;
+        const totalTableHeight = ROWS_PER_PAGE * LABEL_HEIGHT_MM;
+        const horizontalMargin = (210 - totalTableWidth) / 2; // 0mm each side
+        const verticalMarginTotal = 297 - totalTableHeight; // 9mm total
+        const topMargin = Math.max(4.5, verticalMarginTotal / 2); // ~4.5mm
+        const bottomMargin = Math.max(4.5, verticalMarginTotal / 2); // ~4.5mm
         
         const table = new Table({
           rows,
           width: {
-            size: 100,
-            type: WidthType.PERCENTAGE,
+            size: convertMillimetersToTwip(totalTableWidth),
+            type: WidthType.DXA,
           },
           borders: {
             top: { style: BorderStyle.NONE, size: 0 },
@@ -412,7 +439,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         const doc = new Document({
           sections: [{
-            properties: {},
+            properties: {
+              page: {
+                size: {
+                  width: convertMillimetersToTwip(210), // A4 width
+                  height: convertMillimetersToTwip(297), // A4 height
+                  orientation: PageOrientation.PORTRAIT,
+                },
+                margin: {
+                  top: convertMillimetersToTwip(topMargin),
+                  bottom: convertMillimetersToTwip(bottomMargin),
+                  left: convertMillimetersToTwip(horizontalMargin),
+                  right: convertMillimetersToTwip(horizontalMargin),
+                },
+              },
+            },
             children: [table],
           }],
         });

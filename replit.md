@@ -84,7 +84,7 @@ Preferred communication style: Simple, everyday language.
   - Boolean flag for active/inactive status
   
 **UI Features**
-- Inline comment editing: Double-click to edit, Enter to save, Escape to cancel
+- Inline comment editing: Single-click to edit, Enter to save, Escape to cancel
 - All table columns sortable (ascending/descending alphabetically)
 - Phone and email fields available in edit dialog (removed from main table view)
 - Advanced search and filtering by tags and zipcodes
@@ -100,13 +100,22 @@ Preferred communication style: Simple, everyday language.
 - Protected by authentication when database is enabled
 
 **Export Features**
-- Excel (.xlsx) export with full business data
+- Excel (.xlsx) export with full business data:
+  - Auto-sized columns with minimum 12 characters width
+  - Individual tag columns (Tag 1, Tag 2, Tag 3, etc.)
+  - No width cap for optimal readability
 - CSV export for compatibility
-- Word (.docx) export with centered formatting for mailing labels:
-  - Business name on top (Heading 2, centered)
-  - Street name in middle (centered)
-  - Zipcode and city at bottom (centered)
-  - Proper spacing between entries
+- Word (.docx) export formatted for Avery Zweckform 3479 label sheets:
+  - A4 page size (210mm × 297mm) with optimized margins
+  - 27 labels per page (3 columns × 9 rows)
+  - Each label: 70mm × 32mm (exact dimensions)
+  - Aptos font, 11pt size
+  - All text uppercase and centered
+  - Business name in bold
+  - Ready for direct printing on Avery 3479 label sheets
+- Custom filename support: "Post Mailing List - [custom name].[ext]" with live preview
+- Smart export defaults: selected records when rows selected, all records otherwise
+- Single "Clear All Filters" button clears all 4 filters at once
 - Protected by authentication when database is enabled
 
 **Authentication & Security**
