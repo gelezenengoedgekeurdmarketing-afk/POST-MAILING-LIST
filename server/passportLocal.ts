@@ -15,6 +15,8 @@ export async function setupLocalAuth(app: Express) {
     },
     async (username, password, done) => {
       try {
+        console.log('🔍 Login attempt for username:', username);
+        
         // Find user by username
         const [user] = await db
           .select()
@@ -22,23 +24,32 @@ export async function setupLocalAuth(app: Express) {
           .where(eq(users.username, username))
           .limit(1);
 
+        console.log('🔍 User found:', user ? 'yes' : 'no');
         if (!user) {
+          console.log('❌ User not found in database');
           return done(null, false, { message: 'Invalid username or password' });
         }
 
+        console.log('🔍 Has password hash:', user.passwordHash ? 'yes' : 'no');
         if (!user.passwordHash) {
+          console.log('❌ User has no password hash');
           return done(null, false, { message: 'Invalid username or password' });
         }
 
         // Verify password
+        console.log('🔍 Comparing password...');
         const isValidPassword = await bcrypt.compare(password, user.passwordHash);
+        console.log('🔍 Password valid:', isValidPassword);
         
         if (!isValidPassword) {
+          console.log('❌ Password mismatch');
           return done(null, false, { message: 'Invalid username or password' });
         }
 
+        console.log('✅ Login successful for user:', username);
         return done(null, user);
       } catch (error) {
+        console.error('❌ Login error:', error);
         return done(error);
       }
     }
