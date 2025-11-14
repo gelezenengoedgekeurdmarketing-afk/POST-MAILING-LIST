@@ -96,10 +96,12 @@ Preferred communication style: Simple, everyday language.
 - Merges dialog tags WITH per-row tags from Categorie column (no replacement)
 - Automatically coerces numeric Excel values to strings
 - Email field can be left blank (no auto-generated placeholders)
-- **Duplicate prevention**: Automatically detects and skips businesses with duplicate addresses (same street name, zipcode, and city)
+- **Duplicate prevention**: Automatically detects and skips businesses with duplicate combinations of street name and business name
+  - Uses streetName + name as the uniqueness key (case-insensitive)
+  - Multiple businesses can share the same city, zipcode, or tags
   - Prevents duplicates from existing database records
   - Prevents duplicates within the same import file
-  - Reports skipped duplicates with row numbers and addresses in console
+  - Reports skipped duplicates with row numbers and business details in console
   - Shows duplicate count in import success message
 - Detailed partial success reporting with row-level errors
 - Protected by authentication when database is enabled

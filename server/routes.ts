@@ -161,11 +161,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get existing businesses to check for duplicates
       const existingBusinesses = await storage.getAllBusinesses();
       
-      // Create a Set of existing addresses for quick duplicate checking
-      // Using streetName + zipcode + city as the unique identifier
-      const existingAddresses = new Set(
+      // Create a Set of existing business identifiers for quick duplicate checking
+      // Using streetName + name as the unique identifier
+      // (Duplicate cities, tags, zipcodes are OK, but streetName + name must be unique)
+      const existingBusinessKeys = new Set(
         existingBusinesses.map((b: any) => 
-          `${b.streetName.toLowerCase().trim()}|${b.zipcode.toLowerCase().trim()}|${b.city.toLowerCase().trim()}`
+          `${b.streetName.toLowerCase().trim()}|${b.name.toLowerCase().trim()}`
         )
       );
 
@@ -220,20 +221,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
           } else {
             const validated = insertBusinessSchema.parse(business);
             
-            // Check for duplicate address (streetName + zipcode + city)
-            const addressKey = `${validated.streetName.toLowerCase().trim()}|${validated.zipcode.toLowerCase().trim()}|${validated.city.toLowerCase().trim()}`;
+            // Check for duplicate business (streetName + name)
+            const businessKey = `${validated.streetName.toLowerCase().trim()}|${validated.name.toLowerCase().trim()}`;
             
-            if (existingAddresses.has(addressKey)) {
+            if (existingBusinessKeys.has(businessKey)) {
               // Duplicate found in existing database
               results.duplicates.push({
                 row: index + 2,
                 data: row,
-                reason: "Address already exists in database",
-                address: `${validated.streetName}, ${validated.zipcode} ${validated.city}`,
+                reason: "Business with same name and street address already exists",
+                business: `${validated.name} at ${validated.streetName}`,
               });
             } else {
-              // Add to existing addresses to prevent duplicates within the same import file
-              existingAddresses.add(addressKey);
+              // Add to existing keys to prevent duplicates within the same import file
+              existingBusinessKeys.add(businessKey);
               results.success.push(validated);
             }
           }
@@ -246,10 +247,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
 
+      // Log import summary
+      console.log(`Import summary: ${results.success.length} successful, ${results.errors.length} errors, ${results.duplicates.length} duplicates from ${data.length} total rows`);
+      
       // Create businesses for successful rows
       let createdBusinesses: any[] = [];
       if (results.success.length > 0) {
+        console.log(`Creating ${results.success.length} businesses...`);
         createdBusinesses = await storage.createBusinesses(results.success);
+        console.log(`Created ${createdBusinesses.length} businesses successfully`);
       }
 
       res.status(results.errors.length > 0 ? 207 : 201).json({
