@@ -262,7 +262,7 @@ export function BusinessTable({ data, onEdit, onDelete, selectedIds, onSelection
 
         return (
           <div
-            className="text-muted-foreground text-sm cursor-pointer hover-elevate rounded px-2 py-1 min-h-8 flex items-center group"
+            className="text-muted-foreground text-sm cursor-pointer hover-elevate rounded border border-border px-2 py-1 min-h-8 flex items-center group"
             onDoubleClick={() => handleCommentEdit(business.id, business.comment || '')}
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
@@ -275,7 +275,7 @@ export function BusinessTable({ data, onEdit, onDelete, selectedIds, onSelection
             aria-label={`Edit comment for ${business.name}`}
             data-testid={`comment-${business.id}`}
           >
-            <span className="flex-1">{business.comment || 'Double-click to add info...'}</span>
+            <span className="flex-1">{business.comment}</span>
             <Pencil className="h-3 w-3 opacity-0 group-hover:opacity-50 transition-opacity ml-2" />
           </div>
         );
