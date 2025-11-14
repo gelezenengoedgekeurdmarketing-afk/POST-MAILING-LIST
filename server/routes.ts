@@ -262,6 +262,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }));
 
       const worksheet = XLSX.utils.json_to_sheet(data);
+      
+      // Auto-size columns to fit content
+      const columnHeaders = ["Name", "Street Name", "Zipcode", "City", "Email", "Phone", "Tags", "Comment", "Active"];
+      const columnWidths = columnHeaders.map((header, colIndex) => {
+        // Start with header length
+        let maxWidth = header.length;
+        
+        // Check all data rows for this column
+        data.forEach(row => {
+          const value = Object.values(row)[colIndex];
+          const cellLength = value ? String(value).length : 0;
+          maxWidth = Math.max(maxWidth, cellLength);
+        });
+        
+        // Add some padding and set reasonable min/max
+        return { wch: Math.min(Math.max(maxWidth + 2, 10), 50) };
+      });
+      
+      worksheet['!cols'] = columnWidths;
+      
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "Businesses");
 
