@@ -345,7 +345,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                         }),
                       ],
                       alignment: AlignmentType.CENTER,
-                      spacing: { after: 80, before: 0 },
+                      spacing: { after: 40, before: 0, line: 240 },
                     }),
                     new Paragraph({
                       children: [
@@ -356,7 +356,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                         }),
                       ],
                       alignment: AlignmentType.CENTER,
-                      spacing: { after: 80, before: 0 },
+                      spacing: { after: 40, before: 0, line: 240 },
                     }),
                     new Paragraph({
                       children: [
@@ -367,7 +367,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                         }),
                       ],
                       alignment: AlignmentType.CENTER,
-                      spacing: { after: 0, before: 0 },
+                      spacing: { after: 0, before: 0, line: 240 },
                     }),
                   ],
                   width: {
@@ -375,8 +375,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
                     type: WidthType.DXA,
                   },
                   margins: {
-                    top: convertMillimetersToTwip(1),
-                    bottom: convertMillimetersToTwip(1),
+                    top: convertMillimetersToTwip(0.5),
+                    bottom: convertMillimetersToTwip(0.5),
                     left: convertMillimetersToTwip(1),
                     right: convertMillimetersToTwip(1),
                   },
@@ -393,8 +393,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
                     type: WidthType.DXA,
                   },
                   margins: {
-                    top: convertMillimetersToTwip(1),
-                    bottom: convertMillimetersToTwip(1),
+                    top: convertMillimetersToTwip(0.5),
+                    bottom: convertMillimetersToTwip(0.5),
                     left: convertMillimetersToTwip(1),
                     right: convertMillimetersToTwip(1),
                   },
@@ -423,8 +423,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const totalTableHeight = ROWS_PER_PAGE * LABEL_HEIGHT_MM;
         const horizontalMargin = (210 - totalTableWidth) / 2; // 0mm each side
         const verticalMarginTotal = 297 - totalTableHeight; // 9mm total
-        const topMargin = Math.max(4.5, verticalMarginTotal / 2); // ~4.5mm
-        const bottomMargin = Math.max(4.5, verticalMarginTotal / 2); // ~4.5mm
+        // Use very small margins to ensure all 9 rows fit on one page
+        const topMargin = 2; // 2mm
+        const bottomMargin = 2; // 2mm
         
         const table = new Table({
           rows,
