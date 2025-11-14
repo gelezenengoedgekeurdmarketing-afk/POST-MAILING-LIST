@@ -319,6 +319,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const LABEL_WIDTH_MM = 70;
         const LABEL_HEIGHT_MM = 32;
         
+        console.log(`Creating Word export: ${businessesToExport.length} businesses, generating ${ROWS_PER_PAGE} rows × ${COLS_PER_ROW} columns = ${LABELS_PER_PAGE} labels`);
+        
         // Create exactly 9 rows for Avery 3479 label sheet
         for (let rowIndex = 0; rowIndex < ROWS_PER_PAGE; rowIndex++) {
           const cells: TableCell[] = [];
@@ -411,6 +413,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             })
           );
         }
+        
+        console.log(`Created ${rows.length} rows in Word document. Each row has ${COLS_PER_ROW} cells. Total cells: ${rows.length * COLS_PER_ROW}`);
         
         // Calculate margins to center the label grid on the page
         // Available width: 210mm, needed: 3 × 70mm = 210mm → minimal horizontal margins
