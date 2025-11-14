@@ -249,22 +249,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
         businessesToExport = await storage.getAllBusinesses();
       }
 
-      const data = businessesToExport.map(b => ({
-        Name: b.name,
-        "Street Name": b.streetName,
-        Zipcode: b.zipcode,
-        City: b.city,
-        Email: b.email,
-        Phone: b.phone || '',
-        Tags: (b.tags || []).join(", "),
-        Comment: b.comment || '',
-        Active: b.isActive ? "Yes" : "No",
-      }));
+      // Find maximum number of tags across all businesses
+      const maxTags = Math.max(...businessesToExport.map(b => (b.tags || []).length), 0);
+      
+      // Create data with individual tag columns
+      const data = businessesToExport.map(b => {
+        const row: any = {
+          Name: b.name,
+          "Street Name": b.streetName,
+          Zipcode: b.zipcode,
+          City: b.city,
+          Email: b.email,
+          Phone: b.phone || '',
+        };
+        
+        // Add individual tag columns
+        for (let i = 0; i < maxTags; i++) {
+          row[`Tag ${i + 1}`] = (b.tags || [])[i] || '';
+        }
+        
+        row.Comment = b.comment || '';
+        row.Active = b.isActive ? "Yes" : "No";
+        
+        return row;
+      });
 
       const worksheet = XLSX.utils.json_to_sheet(data);
       
       // Auto-size columns to fit content
-      const columnHeaders = ["Name", "Street Name", "Zipcode", "City", "Email", "Phone", "Tags", "Comment", "Active"];
+      const baseHeaders = ["Name", "Street Name", "Zipcode", "City", "Email", "Phone"];
+      const tagHeaders = Array.from({ length: maxTags }, (_, i) => `Tag ${i + 1}`);
+      const endHeaders = ["Comment", "Active"];
+      const columnHeaders = [...baseHeaders, ...tagHeaders, ...endHeaders];
+      
       const columnWidths = columnHeaders.map((header, colIndex) => {
         // Start with header length
         let maxWidth = header.length;
