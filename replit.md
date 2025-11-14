@@ -96,6 +96,11 @@ Preferred communication style: Simple, everyday language.
 - Merges dialog tags WITH per-row tags from Categorie column (no replacement)
 - Automatically coerces numeric Excel values to strings
 - Email field can be left blank (no auto-generated placeholders)
+- **Duplicate prevention**: Automatically detects and skips businesses with duplicate addresses (same street name, zipcode, and city)
+  - Prevents duplicates from existing database records
+  - Prevents duplicates within the same import file
+  - Reports skipped duplicates with row numbers and addresses in console
+  - Shows duplicate count in import success message
 - Detailed partial success reporting with row-level errors
 - Protected by authentication when database is enabled
 
@@ -109,6 +114,7 @@ Preferred communication style: Simple, everyday language.
   - A4 page size (210mm × 297mm) with optimized margins
   - 27 labels per page (3 columns × 9 rows)
   - Each label: 70mm × 32mm (exact dimensions)
+  - Multi-page support: automatically creates additional pages for businesses beyond 27
   - Aptos font, 11pt size
   - All text uppercase and centered
   - Business name in bold

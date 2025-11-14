@@ -189,13 +189,23 @@ export default function Dashboard() {
       const result = await response.json();
       queryClient.invalidateQueries({ queryKey: ["/api/businesses"] });
       
-      if (result.failed > 0) {
+      const hasErrors = result.failed > 0;
+      const hasDuplicates = result.skipped > 0;
+      
+      if (hasErrors || hasDuplicates) {
+        const parts: string[] = [];
+        if (result.imported > 0) parts.push(`Imported ${result.imported} businesses`);
+        if (hasDuplicates) parts.push(`${result.skipped} duplicates skipped`);
+        if (hasErrors) parts.push(`${result.failed} rows failed`);
+        
         toast({
-          title: "Partial import",
-          description: `Imported ${result.imported} businesses. ${result.failed} rows failed. Check console for details.`,
-          variant: "destructive",
+          title: hasErrors ? "Partial import" : "Import completed with duplicates",
+          description: `${parts.join(". ")}. Check console for details.`,
+          variant: hasErrors ? "destructive" : "default",
         });
-        console.error("Import errors:", result.errors);
+        
+        if (hasErrors) console.error("Import errors:", result.errors);
+        if (hasDuplicates) console.warn("Duplicate addresses skipped:", result.duplicates);
       } else {
         toast({
           title: "Import successful",

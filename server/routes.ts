@@ -158,9 +158,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
       const data = XLSX.utils.sheet_to_json(firstSheet);
 
+      // Get existing businesses to check for duplicates
+      const existingBusinesses = await storage.getAllBusinesses();
+      
+      // Create a Set of existing addresses for quick duplicate checking
+      // Using streetName + zipcode + city as the unique identifier
+      const existingAddresses = new Set(
+        existingBusinesses.map((b: any) => 
+          `${b.streetName.toLowerCase().trim()}|${b.zipcode.toLowerCase().trim()}|${b.city.toLowerCase().trim()}`
+        )
+      );
+
       const results = {
         success: [] as any[],
         errors: [] as any[],
+        duplicates: [] as any[],
       };
 
       data.forEach((row: any, index: number) => {
@@ -207,7 +219,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
             });
           } else {
             const validated = insertBusinessSchema.parse(business);
-            results.success.push(validated);
+            
+            // Check for duplicate address (streetName + zipcode + city)
+            const addressKey = `${validated.streetName.toLowerCase().trim()}|${validated.zipcode.toLowerCase().trim()}|${validated.city.toLowerCase().trim()}`;
+            
+            if (existingAddresses.has(addressKey)) {
+              // Duplicate found in existing database
+              results.duplicates.push({
+                row: index + 2,
+                data: row,
+                reason: "Address already exists in database",
+                address: `${validated.streetName}, ${validated.zipcode} ${validated.city}`,
+              });
+            } else {
+              // Add to existing addresses to prevent duplicates within the same import file
+              existingAddresses.add(addressKey);
+              results.success.push(validated);
+            }
           }
         } catch (error: any) {
           results.errors.push({
@@ -225,11 +253,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       res.status(results.errors.length > 0 ? 207 : 201).json({
-        success: results.errors.length === 0,
+        success: results.errors.length === 0 && results.duplicates.length === 0,
         imported: createdBusinesses.length,
         failed: results.errors.length,
+        skipped: results.duplicates.length,
         businesses: createdBusinesses,
         errors: results.errors,
+        duplicates: results.duplicates,
       });
     } catch (error: any) {
       res.status(400).json({ error: error.message });
