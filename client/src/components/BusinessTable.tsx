@@ -242,6 +242,7 @@ export function BusinessTable({ data, onEdit, onDelete, selectedIds, onSelection
     {
       accessorKey: "comment",
       header: "Info",
+      size: 400,
       cell: ({ row }) => {
         const business = row.original;
         const isEditing = editingComments.has(business.id);
