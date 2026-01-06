@@ -20,7 +20,7 @@
 ### Application Setup
 - [ ] Create directory: `/var/www/postmailinglist`
 - [ ] Copy all application files to directory
-- [ ] **IMPORTANT**: Modify `vite.config.ts` to remove Replit-specific plugins (see DEPLOYMENT.md section 3a)
+- [ ] **IMPORTANT**: Replace `vite.config.ts` with `self-hosting/vite.config.ts` and uninstall Replit packages (see DEPLOYMENT.md section 3a)
 - [ ] Create `.env` file with:
   - [ ] `DATABASE_URL=postgresql://...`
   - [ ] `SESSION_SECRET=` (generate 64-char random string)

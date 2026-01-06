@@ -89,13 +89,17 @@ git clone <your-repo-url> .
 
 ### 3a. Required Code Modifications for Self-Hosting
 
-**IMPORTANT**: Before building, you must remove Replit-specific plugins from `vite.config.ts`:
+**IMPORTANT**: Before building, you must replace `vite.config.ts` with the self-hosting version:
 
 ```bash
-nano vite.config.ts
+# Use the pre-made self-hosting config
+cp self-hosting/vite.config.ts ./vite.config.ts
+
+# Remove Replit-specific packages
+npm uninstall @replit/vite-plugin-runtime-error-modal @replit/vite-plugin-cartographer @replit/vite-plugin-dev-banner
 ```
 
-Replace the file contents with this self-hosting compatible version:
+**Alternatively**, manually replace the file contents with:
 
 ```typescript
 import { defineConfig } from "vite";
