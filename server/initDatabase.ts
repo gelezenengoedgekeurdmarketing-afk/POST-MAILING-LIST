@@ -12,6 +12,12 @@ export async function initDatabase() {
     
     const client = await pool.connect();
     try {
+      // Enable pgcrypto extension for gen_random_uuid() - required for UUID generation
+      // Note: PostgreSQL 13+ has gen_random_uuid() built-in, but this ensures compatibility
+      await client.query(`
+        CREATE EXTENSION IF NOT EXISTS pgcrypto;
+      `);
+      
       // Create sessions table for authentication
       await client.query(`
         CREATE TABLE IF NOT EXISTS sessions (

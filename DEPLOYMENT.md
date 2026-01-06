@@ -83,9 +83,56 @@ cd /var/www/postmailinglist
 
 # If you have the code in a Git repository:
 git clone <your-repo-url> .
+```
 
-# OR if you're copying from Replit:
-# Download all files from your Replit project and extract them here
+---
+
+### 3a. Required Code Modifications for Self-Hosting
+
+**IMPORTANT**: Before building, you must remove Replit-specific plugins from `vite.config.ts`:
+
+```bash
+nano vite.config.ts
+```
+
+Replace the file contents with this self-hosting compatible version:
+
+```typescript
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import path from "path";
+
+export default defineConfig({
+  plugins: [react()],
+  resolve: {
+    alias: {
+      "@": path.resolve(import.meta.dirname, "client", "src"),
+      "@shared": path.resolve(import.meta.dirname, "shared"),
+      "@assets": path.resolve(import.meta.dirname, "attached_assets"),
+    },
+  },
+  root: path.resolve(import.meta.dirname, "client"),
+  build: {
+    outDir: path.resolve(import.meta.dirname, "dist/public"),
+    emptyOutDir: true,
+  },
+  server: {
+    fs: {
+      strict: true,
+      deny: ["**/.*"],
+    },
+  },
+});
+```
+
+**Why this is needed**: The original config includes Replit-specific Vite plugins that don't work outside Replit:
+- `@replit/vite-plugin-runtime-error-modal`
+- `@replit/vite-plugin-cartographer`
+- `@replit/vite-plugin-dev-banner`
+
+**Also remove these from package.json devDependencies** (optional but cleaner):
+```bash
+npm uninstall @replit/vite-plugin-runtime-error-modal @replit/vite-plugin-cartographer @replit/vite-plugin-dev-banner
 ```
 
 ---
@@ -116,6 +163,10 @@ PORT=5000
 
 # Node Environment
 NODE_ENV=production
+
+# Optional: Disable secure cookies for HTTP-only deployments (not recommended)
+# Only use this if you can't set up HTTPS and understand the security implications
+# DISABLE_SECURE_COOKIE=true
 ```
 
 #### Generate a Secure Session Secret

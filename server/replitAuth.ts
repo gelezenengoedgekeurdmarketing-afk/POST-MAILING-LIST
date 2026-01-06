@@ -26,6 +26,12 @@ export function getSession() {
     ttl: sessionTtl,
     tableName: "sessions",
   });
+  
+  // In production, secure cookies require HTTPS
+  // For self-hosted HTTP deployments, set NODE_ENV to 'development' or use a reverse proxy with HTTPS
+  const isProduction = process.env.NODE_ENV === 'production';
+  const secureCookie = isProduction && process.env.DISABLE_SECURE_COOKIE !== 'true';
+  
   return session({
     secret: process.env.SESSION_SECRET!,
     store: sessionStore,
@@ -33,7 +39,7 @@ export function getSession() {
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: true,
+      secure: secureCookie,
       maxAge: sessionTtl,
     },
   });

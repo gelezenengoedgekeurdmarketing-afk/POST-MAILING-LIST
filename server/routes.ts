@@ -5,8 +5,7 @@ import { insertBusinessSchema } from "@shared/schema";
 import multer from "multer";
 import * as XLSX from "xlsx";
 import { Document, Packer, Paragraph, TextRun, AlignmentType, HeadingLevel, Table, TableRow, TableCell, WidthType, BorderStyle, PageOrientation, HeightRule, VerticalAlign, convertMillimetersToTwip } from "docx";
-// TODO: Uncomment when database is enabled
-// import { setupAuth, isAuthenticated } from "./replitAuth";
+// Authentication modules are dynamically imported below when database is available
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const upload = multer({ storage: multer.memoryStorage() });
